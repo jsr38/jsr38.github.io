@@ -1,3 +1,4 @@
+<div class="HTML">
 <p>
 &#x2014;
 layout: post
@@ -5,6 +6,10 @@ category : lessons
 tagline: "Supporting tagline"
 tags : [intro, beginner, jekyll, tutorial]
 &#x2014;
+</p>
+
+</div>
+<p>
 {% include JB/setup %}
 </p>
 
@@ -48,7 +53,7 @@ compute categories, tags, permalinks, and construct your pages from layout templ
 </p>
 
 <p>
-Once parsed, Jekyll stores the result in a self-contained static `<sub>site</sub>` folder.
+Once parsed, Jekyll stores the result in a self-contained static `_site` folder.
 The intention here is that you can serve all contents in this folder statically from a plain static web-server.
 </p>
 
@@ -170,21 +175,21 @@ Jekyll expects your website directory to be laid out like so:
 
 
 <ul class="org-ul">
-<li><b><b>\<sub>config.yml</sub></b></b>
+<li><b><b>\_config.yml</b></b>
 Stores configuration data.</li>
 
-<li><b><b>\<sub>includes</sub></b></b>
+<li><b><b>\_includes</b></b>
 This folder is for partial views.</li>
 
-<li><b><b>\<sub>layouts</sub></b></b>
+<li><b><b>\_layouts</b></b>
 This folder is for the main templates your content will be inserted into.
 You can have different layouts for different pages or page sections.</li>
 
-<li><b><b>\<sub>posts</sub></b></b>
+<li><b><b>\_posts</b></b>
 This folder contains your dynamic content/posts.
 the naming format is required to be `@YEAR-MONTH-DATE-title.MARKUP@`.</li>
 
-<li><b><b>\<sub>site</sub></b></b>
+<li><b><b>\_site</b></b>
 This is where the generated site will be placed once Jekyll is done transforming it.</li>
 
 <li><b><b>assets</b></b>
@@ -234,12 +239,12 @@ Both posts and pages can have meta-data assigned on a per-page basis such as tit
 
 <p>
 <b><b>Creating a Post</b></b>
-Posts are created by properly formatting a file and placing it the `<sub>posts</sub>` folder.
+Posts are created by properly formatting a file and placing it the `_posts` folder.
 </p>
 
 <p>
 <b><b>Formatting</b></b>
-A post must have a valid filename in the form `YEAR-MONTH-DATE-title.MARKUP` and be placed in the `<sub>posts</sub>` directory.
+A post must have a valid filename in the form `YEAR-MONTH-DATE-title.MARKUP` and be placed in the `_posts` directory.
 If the data format is invalid Jekyll will not recognize the file as a post. The date and title are automatically parsed from the filename of the post file.
 Additionally, each file must have [YAML Front-Matter](<a href="https://github.com/mojombo/jekyll/wiki/YAML-Front-Matter">https://github.com/mojombo/jekyll/wiki/YAML-Front-Matter</a>) prepended to its content.
 YAML Front-Matter is a valid YAML syntax specifying meta-data for the given file.
@@ -351,7 +356,7 @@ The page variable holds accessible data for the given page or post being rendere
 
 <p>
 <b><b>Create a Template</b></b>
-Templates are created by properly formatting a file and placing it in the `<sub>layouts</sub>` directory.
+Templates are created by properly formatting a file and placing it in the `_layouts` directory.
 </p>
 
 <p>
@@ -389,7 +394,7 @@ Render the content variable wherever you want your main content to be injected i
   &lt;/div&gt;
 &lt;/body&gt;
 &#x2026;{% endcapture %}
-{% include JB/liquid<sub>raw</sub> %}
+{% include JB/liquid_raw %}
 </p>
 
 <p>
@@ -404,7 +409,7 @@ This essentially means a template will render inside of another template.
 
 <p>
 ### Includes
-In Jekyll you can define include files by placing them in the `<sub>includes</sub>` folder.
+In Jekyll you can define include files by placing them in the `_includes` folder.
 Includes are NOT templates, rather they are just code snippets that get included into templates.
 In this way, you can treat the code inside includes as if it was native to the parent template.
 </p>
@@ -518,7 +523,7 @@ And thus there are two main types of file formats needed for this parsing.
 <li><b><b>Post and Page files.</b></b>
 All content in Jekyll is either a post or a page so valid posts and pages are parsed with markdown or textile.</li>
 <li><b><b>Template files.</b></b>
-These files go in `<sub>layouts</sub>` folder and contain your blogs <b><b>templates</b></b>. They should be made in HTML with the help of Liquid syntax.
+These files go in `_layouts` folder and contain your blogs <b><b>templates</b></b>. They should be made in HTML with the help of Liquid syntax.
 Since include files are simply injected into templates they are essentially parsed as if they were native to the template.</li>
 </ul>
 
@@ -644,11 +649,3 @@ Jekyll-bootstrap is intended to provide helper methods and strategies aimed at m
 <p>
 <b><b>Thank you</b></b> for reading this far.
 </p>
-
-<p>
-## Next Steps
-</p>
-
-<p>
-Please take a look at [{{ site.categories.api.first.title }}]({{ BASE<sub>PATH</sub> }}{{ site.categories.api.first.url }})
-or jump right into [Usage]({{ BASE<sub>PATH</sub> }}{{ site.categories.usage.first.url }}) if you'd like.</p>
