@@ -1,0 +1,96 @@
+---
+layout: post
+category : technical
+tagline: "The path to enlightenment: reproducible research."
+tags : [technical, emacs, org-mode, python, numpy, julia]
+---
+<p>
+{% include JB/setup %}
+</p>
+
+<div id="outline-container-org9f2a693" class="outline-2">
+<h2 id="org9f2a693"><span class="section-number-2">1</span> Reproducible Research</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+These postings have come about as a result of an abandoned attempt to process and publish 
+my notes contained within a proprietary system using a combination of a Python API and XML 
+Stylesheet Transforms.  The solution was abandoned not because the task was particularly 
+difficult but that it was inherently fragile due to it relying on what a third-party API 
+would return when queried for content and that the API apparently made no guarantees about 
+future changes.  It was also labourious to cater for each case of the custom markup elements
+ in the transformation.
+</p>
+
+<p>
+The motivation was to be able to selectively publish notes containing code including Latex
+ markup to a public web site.  At the time, I was using a proprietary system as this seemed 
+convenient and worthwhile to have the notes managed across multiple devices including mobile
+ devices without resorting to distributed source control or other synchronisation means.  It
+ transpired that when taking in to account the effort to reliably transform and publish from 
+this system that the cost outweighed the benefit.
+</p>
+
+<p>
+Also at the time it was not a concern of mine to integrate runnable code fragments and output 
+of analysis in the published documents, however, on reflection and based on past experiences, 
+it is clearly invaluable to do this for many reasons.  Just as the in the software world 
+Test Driven Development provides reassurances of correctness and a formal method of documenting
+ the intended function of code, a similar kind of reproducibility can be had when carrying 
+out research work.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org302cf70" class="outline-2">
+<h2 id="org302cf70"><span class="section-number-2">2</span> Emacs Org-mode</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+I was not previously aware of Emacs' org-mode and it seems hugely capable in respect of the 
+stated objective and many others are clearly in agreement.  Org-mode allows text, graphics 
+and code to all be edited and previewed in Emacs and offers a framework for publishing with
+ numerous so-called back-ends for transforming documents into Latex and HTML.
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-orgb3b8022" class="outline-2">
+<h2 id="orgb3b8022"><span class="section-number-2">3</span> Jekyll</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+The Jekyll parsing engine drives GitHub Pages which are a convenient way of linking version
+control with Git to a public facing web site.
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-orgbfc6628" class="outline-2">
+<h2 id="orgbfc6628"><span class="section-number-2">4</span> Inline Julia and Python</h2>
+</div>
+
+
+<div id="outline-container-org08a856b" class="outline-2">
+<h2 id="org08a856b"><span class="section-number-2">5</span> Resources</h2>
+<div class="outline-text-2" id="text-5">
+<p>
+Here are some resources I found useful:
+</p>
+
+<p>
+<a href="https://www.jstatsoft.org/article/view/v046i03">Schulte, Davidson, Dye, Dominik A Multi-Language Computing Environment for Literate Programming and Reproducible Research</a>
+</p>
+
+<p>
+<a href="http://orgmode.org/worg/org-contrib/babel/">Babel Org-mode documentation</a>
+</p>
+
+<p>
+<a href="http://orgmode.org/">Org-mode</a>
+</p>
+
+<p>
+<a href="http://orgmode.org/worg/org-tutorials/org-jekyll.html">Org-mode with Jekyll</a>
+</p>
+</div>
+</div>

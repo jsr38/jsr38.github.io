@@ -1,6 +1,6 @@
 ---
-layout: post
-category : solutions
+layout: page
+category : ee3321solutions
 tagline: "EE3321 Electromagnetic Field Theory Solutions 1"
 tags : [solutions, ee3321, emtheory]
 ---
@@ -8,12 +8,13 @@ tags : [solutions, ee3321, emtheory]
 {% include JB/setup %}
 </p>
 
-<div id="outline-container-org6f61dd3" class="outline-2">
-<h2 id="org6f61dd3"><span class="section-number-2">1</span> Problems</h2>
+<p>
+These are my solutions to the problems from <a href="http://emlab.utep.edu/ee3321emf/Homework%201%20--%20Vectors.pdf">Homework 1</a> .
+</p>
+
+<div id="outline-container-org856782b" class="outline-2">
+<h2 id="org856782b"><span class="section-number-2">1</span> </h2>
 <div class="outline-text-2" id="text-1">
-</div><div id="outline-container-org0795d4f" class="outline-3">
-<h3 id="org0795d4f"><span class="section-number-3">1.1</span> Problem 1</h3>
-<div class="outline-text-3" id="text-1-1">
 \begin{equation}
 \mathbf{A} = \frac{1}{\sqrt{\left(2 - 1 \right )^2
 + \left(-1 + 1 \right )^2
@@ -32,9 +33,9 @@ tags : [solutions, ee3321, emtheory]
 </div>
 </div>
 
-<div id="outline-container-orge5c0a34" class="outline-3">
-<h3 id="orge5c0a34"><span class="section-number-3">1.2</span> Problem 2</h3>
-<div class="outline-text-3" id="text-1-2">
+<div id="outline-container-org2030c07" class="outline-2">
+<h2 id="org2030c07"><span class="section-number-2">2</span> </h2>
+<div class="outline-text-2" id="text-2">
 <p>
 \(\mathbf{A} = 2\mathbf{i} - 2\mathbf{j} + \mathbf{k}\) and \(\mathbf{B} = 2\mathbf{i} - \mathbf{j} + 3\mathbf{k}\) and \(\mathbf{C} = 4\mathbf{i} + 2\mathbf{j} - 2 \mathbf{k}\).
 </p>
@@ -54,7 +55,80 @@ tags : [solutions, ee3321, emtheory]
 </div>
 
 
-<div id="outline-container-org7f4c700" class="outline-3">
-<h3 id="org7f4c700"><span class="section-number-3">1.3</span> Problem 3</h3>
+<div id="outline-container-orgad41c1b" class="outline-2">
+<h2 id="orgad41c1b"><span class="section-number-2">3</span> </h2>
+<div class="outline-text-2" id="text-3">
+<div class="org-src-container">
+<pre class="src src-python">import matplotlib.pyplot as plt
+import numpy as np
+
+from mpl_toolkits.mplot3d import Axes3D
+
+p1 = np.array([0.0, 4.0, 4.0])
+p2 = np.array([4.0,-4.0, 4.0])
+p3 = np.array([2.0, 2.0,-4.0])
+
+p12 = p2 - p1
+p13 = p3 - p1
+
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+#ax.set_aspect("equal")
+
+#draw the arrow
+ax.quiver(p1[0], p1[1], p1[2],
+	  p12[0], p12[1], p12[2])
+ax.quiver(p1[0], p1[1], p1[2],
+	  p13[0], p13[1], p13[2])
+
+ax.set_xlim([0, 5])
+ax.set_ylim([-5, 5])
+ax.set_zlim([-5, 5])
+
+plt.savefig('../images/ee3321-hw1-p3.png')
+return '../images/ee3321-hw1-p3.png'
+</pre>
+</div>
+
+<figure>
+  <img src="{{ site.url }}/assets/ee3321-hw1-p3.png" alt="Problem 3 visualisation">	
+  <figcaption>Problem 3 visualisation</figcaption>
+</figure>
+
+<div class="org-src-container">
+<pre class="src src-python">import numpy as np
+import scipy.linalg as la
+
+p1 = np.array([0,4,4])
+p2 = np.array([4,-4,4])
+p3 = np.array([2,2,-4])
+
+p12 = p2 - p1
+p13 = p3 - p1
+p12crossp13 = np.cross(p12, p13)
+p12crossp13norm = la.norm(p12crossp13)
+
+print("$A_T = {}$".format(p12crossp13norm / 2.0))
+</pre>
+</div>
+<p>
+\(A_T = 36.0\)
+</p>
+
+\begin{align*}
+\mathbf{P_1} & = \begin{bmatrix} 0 \\ 4 \\ 4 \end{bmatrix}
+\mathbf{P_2} = \begin{bmatrix} 4 \\-4 \\ 4 \end{bmatrix}
+\mathbf{P_3} = \begin{bmatrix} 2 \\ 2 \\-4 \end{bmatrix} \\
+\mathbf{P_{12}} & = \mathbf{P_2} - \mathbf{P_1} = \begin{bmatrix} 4 \\-8 \\ 0 \end{bmatrix} \\
+\mathbf{P_{13}} & = \mathbf{P_3} - \mathbf{P_1} = \begin{bmatrix} 2 \\-2 \\-8 \end{bmatrix} \\
+\mathbf{P_{12}} \times \mathbf{P_{13}} & =
+\begin{bmatrix}
+\mathbf{i} & \mathbf{j} & \mathbf{k} \\
+4 & -8 & 0  \\
+2 & -2 & -8
+\end{bmatrix} = \left ( \left ( -8 \right )^2 - 0 \right )\mathbf{i} - \left ( -32 - 0 \right )\mathbf{j} + \left ( -8 -16 \right )\mathbf{k} \\
+& = 64\mathbf{i} + 32\mathbf{j} - 24\mathbf{k} \\
+\lVert \mathbf{P_{12}} \times \mathbf{P_{13}} \rVert & = 
+\end{align*}
 </div>
 </div>
