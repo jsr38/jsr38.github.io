@@ -1,0 +1,107 @@
+---
+layout: post
+category : technical
+tagline: "Download files matching regex given a document containing links"
+tags : [technical, python]
+---
+<p>
+{% include JB/setup %}
+</p>
+
+<div id="outline-container-org4e6cf55" class="outline-2">
+<h2 id="org4e6cf55"><span class="section-number-2">1</span> Given a page, download linked to files matching regex</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+Suppose we want to download all the tutorials from the following web page
+</p>
+
+<pre class="example" id="url-example">
+http://emlab.utep.edu/ee3321emf.htm
+</pre>
+
+<p>
+We construct a suitable regex which is in this case
+</p>
+
+<pre class="example" id="regex-example">
+/href=".*(Homework.*.pdf)"/
+</pre>
+
+
+<div class="org-src-container">
+<pre class="src src-python" id="org0c09e2b"><span style="color: #a020f0;">import</span> os
+<span style="color: #a020f0;">import</span> re
+<span style="color: #a020f0;">import</span> requests
+<span style="color: #a020f0;">import</span> sys
+<span style="color: #a020f0;">import</span> urllib.parse <span style="color: #a020f0;">as</span> up
+
+<span style="color: #a020f0;">from</span> argparse <span style="color: #a020f0;">import</span> ArgumentParser
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-python" id="org58fecf0"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">download_file</span>(url, dest):
+    <span style="color: #a0522d;">local_filename</span> = dest + url.split(<span style="color: #8b2252;">'/'</span>)[-1]
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">NOTE the stream=True parameter</span>
+    <span style="color: #a0522d;">r</span> = requests.get(url, stream=<span style="color: #008b8b;">True</span>)
+    <span style="color: #a020f0;">with</span> <span style="color: #483d8b;">open</span>(local_filename, <span style="color: #8b2252;">'wb'</span>) <span style="color: #a020f0;">as</span> f:
+        <span style="color: #a020f0;">for</span> chunk <span style="color: #a020f0;">in</span> r.iter_content(chunk_size=1024): 
+            <span style="color: #a020f0;">if</span> chunk: <span style="color: #b22222;"># </span><span style="color: #b22222;">filter out keep-alive new chunks</span>
+                f.write(chunk)
+                <span style="color: #b22222;">#</span><span style="color: #b22222;">f.flush() commented by recommendation from J.F.Sebastian</span>
+    <span style="color: #a020f0;">return</span> local_filename
+
+<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">main</span>():
+    <span style="color: #a0522d;">parser</span> = ArgumentParser(description=<span style="color: #8b2252;">"Download files linked to by web page."</span>)
+    parser.add_argument(<span style="color: #8b2252;">"-u"</span>, <span style="color: #8b2252;">"--url"</span>, 
+                        <span style="color: #483d8b;">type</span>=<span style="color: #483d8b;">str</span>,
+                        <span style="color: #483d8b;">help</span>=<span style="color: #8b2252;">"URL of the page"</span>)
+    parser.add_argument(<span style="color: #8b2252;">"-r"</span>, <span style="color: #8b2252;">"--regex"</span>, 
+                        <span style="color: #483d8b;">type</span>=<span style="color: #483d8b;">str</span>,
+                        <span style="color: #483d8b;">help</span>=<span style="color: #8b2252;">"Regex to match links with"</span>)
+    parser.add_argument(<span style="color: #8b2252;">"-d"</span>, <span style="color: #8b2252;">"--dest"</span>, 
+                        <span style="color: #483d8b;">type</span>=<span style="color: #483d8b;">str</span>,
+                        <span style="color: #483d8b;">help</span>=<span style="color: #8b2252;">"Destination directory"</span>)
+    <span style="color: #a0522d;">args</span> = parser.parse_args()
+
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'Regex [ {} ]'</span>.<span style="color: #483d8b;">format</span>(args.regex))
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'URL [ {} ]'</span>.<span style="color: #483d8b;">format</span>(args.url))
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'Destination [ {} ]'</span>.<span style="color: #483d8b;">format</span>(args.dest))
+
+    <span style="color: #a0522d;">r</span> = requests.get(args.url)
+    <span style="color: #a0522d;">p</span> = re.<span style="color: #483d8b;">compile</span>(args.regex)
+    <span style="color: #a0522d;">filenames</span> = p.findall(r.text)
+
+    <span style="color: #a020f0;">for</span> filename <span style="color: #a020f0;">in</span> filenames:
+        <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'Downloading [ {} ]'</span>.<span style="color: #483d8b;">format</span>(filename))
+        <span style="color: #a0522d;">o</span> = up.urljoin(args.url, filename)
+        download_file(o, args.dest)
+
+    <span style="color: #a020f0;">return</span> 0
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-shell" id="org370f389">python download_by_regex.py --url http://emlab.utep.edu/ee3321emf.htm --regex <span style="color: #a0522d;">href</span>=<span style="color: #8b2252;">\"</span>.*<span style="color: #8b2252;">\(</span>Homework.*.pdf<span style="color: #8b2252;">\)\"</span> --dest ../downloads/ee3321emf/ 2&gt;&amp;1
+true
+</pre>
+</div>
+
+<pre class="example">
+Regex [ href=".*(Homework.*.pdf)" ]
+URL [ http://emlab.utep.edu/ee3321emf.htm ]
+Destination [ ../downloads/ee3321emf/ ]
+Downloading [ Homework 0 -- Example.pdf ]
+Downloading [ Homework 1 -- Vectors.pdf ]
+Downloading [ Homework 2 -- Vector Calculus.pdf ]
+Downloading [ Homework 3 -- Maxwells Eqs.pdf ]
+Downloading [ Homework 4 -- Fields and Charges.pdf ]
+Downloading [ Homework 5 -- Potential and Boundary Conditions.pdf ]
+Downloading [ Homework 6 -- Resistors and capacitors.pdf ]
+Downloading [ Homework 7 -- Fields and currents.pdf ]
+Downloading [ Homework 8 -- Currents and Forces.pdf ]
+Downloading [ Homework 9 -- Inductors and Waves.pdf ]
+Downloading [ Homework 10 -- Waves and scattering.pdf ]
+</pre>
+</div>
+</div>
