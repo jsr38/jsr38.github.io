@@ -12,8 +12,11 @@ tags : [solutions, ee3321, emtheory]
 These are my solutions to the problems from <a href="http://emlab.utep.edu/ee3321emf/Homework%201%20--%20Vectors.pdf">Homework 1</a> .
 </p>
 
-<div id="outline-container-orgf24701b" class="outline-2">
-<h2 id="orgf24701b"><span class="section-number-2">1</span> </h2>
+<a href="{{ site.url }}/assets/ee3321emf/Homework 1 -- Vectors.pdf">Homework 1</a>
+
+
+<div id="outline-container-org3c222a5" class="outline-2">
+<h2 id="org3c222a5"><span class="section-number-2">1</span> </h2>
 <div class="outline-text-2" id="text-1">
 \begin{equation}
 \mathbf{A} = \frac{1}{\sqrt{\left(2 - 1 \right )^2
@@ -33,8 +36,8 @@ These are my solutions to the problems from <a href="http://emlab.utep.edu/ee332
 </div>
 </div>
 
-<div id="outline-container-org0833219" class="outline-2">
-<h2 id="org0833219"><span class="section-number-2">2</span> </h2>
+<div id="outline-container-org6151a71" class="outline-2">
+<h2 id="org6151a71"><span class="section-number-2">2</span> </h2>
 <div class="outline-text-2" id="text-2">
 <p>
 \(\mathbf{A} = 2\mathbf{i} - 2\mathbf{j} + \mathbf{k}\) and \(\mathbf{B} = 2\mathbf{i} - \mathbf{j} + 3\mathbf{k}\) and \(\mathbf{C} = 4\mathbf{i} + 2\mathbf{j} - 2 \mathbf{k}\).
@@ -55,8 +58,8 @@ These are my solutions to the problems from <a href="http://emlab.utep.edu/ee332
 </div>
 
 
-<div id="outline-container-org244b7b4" class="outline-2">
-<h2 id="org244b7b4"><span class="section-number-2">3</span> </h2>
+<div id="outline-container-org5f7be61" class="outline-2">
+<h2 id="org5f7be61"><span class="section-number-2">3</span> </h2>
 <div class="outline-text-2" id="text-3">
 <div class="org-src-container">
 <pre class="src src-python"><span style="color: #a020f0;">import</span> matplotlib.pyplot <span style="color: #a020f0;">as</span> plt
@@ -134,9 +137,24 @@ A_T &= \frac{\lVert \mathbf{P_{12}} \times \mathbf{P_{13}} \rVert}{2} = 36
 </div>
 </div>
 
-<div id="outline-container-org8d4e92d" class="outline-2">
-<h2 id="org8d4e92d"><span class="section-number-2">4</span> </h2>
+<div id="outline-container-orgd4cb27d" class="outline-2">
+<h2 id="orgd4cb27d"><span class="section-number-2">4</span> </h2>
 <div class="outline-text-2" id="text-4">
+</div><div id="outline-container-orge013e76" class="outline-3">
+<h3 id="orge013e76"><span class="section-number-3">4.1</span> </h3>
+<div class="outline-text-3" id="text-4-1">
+<p>
+For \(\mathbf{A}\) and \(\mathbf{B}\) to be parallel we must have that \(\mathbf{A} = \lambda \mathbf{B}\) 
+and equating elements we have 
+</p>
+
+\begin{align*}
+-3\mathbf{j} &= \lambda 2\mathbf{j} \\
+\Rightarrow \lambda &= -\frac{3}{2} \\
+\Rightarrow B_x &= \frac{2}{\lambda} = -\frac{4}{3} \\
+\Rightarrow B_z &= \frac{1}{\lambda} = -\frac{2}{3}
+\end{align*}
+
 <p>
 Check \(B_x\) and \(B_z\)
 </p>
@@ -148,11 +166,191 @@ Check \(B_x\) and \(B_z\)
 <span style="color: #a0522d;">A</span> = np.array([2,-3,1])
 <span style="color: #a0522d;">B</span> = np.array([-4.0/3.0,2,-2.0/3.0])
 
-
-<span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"$\frac{\mathbf{A} \cdot \mathbf{B} }"</span>                      \
-      <span style="color: #8b2252;">"{\lVert \mathbf{A} \rVert \lVert \mathbf{B} \rVert} = {}$"</span> \
-      .<span style="color: #483d8b;">format</span>(np.dot(A, B) / (la.norm(A) * la.norm(B))))
+<span style="color: #a020f0;">return</span> np.dot(A, B) / (la.norm(A) * la.norm(B))
 </pre>
+</div>
+<p>
+-1.0
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgff37720" class="outline-3">
+<h3 id="orgff37720"><span class="section-number-3">4.2</span> </h3>
+<div class="outline-text-3" id="text-4-2">
+<p>
+For the two vectors to be perpendicular we have \(\cos{\theta} = 0\).  From the definition of the
+dot product and applying this condition we have
+</p>
+
+\begin{align*}
+\cos{\theta} &= \frac{\mathbf{A} \cdot \mathbf{B}}{\lVert \mathbf{A} \rVert \lVert \mathbf{B} \rVert} \\
+\Rightarrow 0 &= \mathbf{A} \cdot \mathbf{B} \\
+\Rightarrow 0 &= 2B_x - 6 + B_z \\
+\Rightarrow B_z &= 6 - 2B_x
+\end{align*}
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgd4e116c" class="outline-2">
+<h2 id="orgd4e116c"><span class="section-number-2">5</span> </h2>
+<div class="outline-text-2" id="text-5">
+</div><div id="outline-container-org93340b1" class="outline-3">
+<h3 id="org93340b1"><span class="section-number-3">5.1</span> </h3>
+<div class="outline-text-3" id="text-5-1">
+\begin{align*}
+\lVert \mathbf{A} \rVert &= \sqrt{1^2 + 2^2 \left ( -3 \right )^2} = \sqrt{14} \\
+\hat{\mathbf{A}} &= \frac{\mathbf{A}}{\lVert \mathbf{A} \rVert} \\
+&= \frac{1}{\sqrt{14}} \begin{bmatrix} 1\\ 2\\ -3\end{bmatrix}
+\end{align*}
+</div>
+</div>
+
+<div id="outline-container-orgfd5c4c1" class="outline-3">
+<h3 id="orgfd5c4c1"><span class="section-number-3">5.2</span> </h3>
+<div class="outline-text-3" id="text-5-2">
+\begin{align*}
+\textit{proj}_{\mathbf{A}}\mathbf{B} &= \frac{\mathbf{A} \cdot \mathbf{B}}{\lVert \mathbf{A} \rVert^2} \mathbf{A}  \\
+&= \frac{\begin{bmatrix} 1\\ 2\\ -3\end{bmatrix} \cdot \begin{bmatrix} 2\\ -4\\ 0\end{bmatrix}}{ 1^2 + 2^2 +\left ( -3 \right )^2} \mathbf{A} \\
+&= \frac{2 - 8 + 0}{14} \mathbf{A} = -\frac{3}{7} \mathbf{A}
+\end{align*}
+
+<p>
+and therefore the component of \(\mathbf{B}\) along \(\mathbf{A}\) is \(-\frac{3}{7}\).
+</p>
+</div>
+</div>
+
+<div id="outline-container-orga2d491d" class="outline-3">
+<h3 id="orga2d491d"><span class="section-number-3">5.3</span> </h3>
+<div class="outline-text-3" id="text-5-3">
+\begin{align*}
+\cos{\theta_{\mathbf{A}\mathbf{C}}} &= \frac{\mathbf{A} \cdot \mathbf{C}}{\lVert \mathbf{A} \rVert \lVert \mathbf{C} \rVert} \\
+                                    &= \frac{\begin{bmatrix} 1\\ 2\\ -3\end{bmatrix} \cdot \begin{bmatrix} 0\\ 2\\ -4\end{bmatrix}}
+                                    { \sqrt{1^2 + 2^2 +\left ( -3 \right )^2} \sqrt{0 + 2^2 + \left ( -4 \right )^2}} \\
+                                    &= \frac{0 + 4 + 12}{\sqrt{14} \sqrt{20}} =  \frac{16}{2\sqrt{14}\sqrt{5}} = \frac{8}{\sqrt{70}} \\
+\Rightarrow \theta_{\mathbf{A}\mathbf{C}} &= \arccos{\frac{8}{\sqrt{70}}}
+\end{align*}
+
+<p>
+Checking:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python"><span style="color: #a020f0;">import</span> numpy <span style="color: #a020f0;">as</span> np
+<span style="color: #a020f0;">import</span> scipy.linalg <span style="color: #a020f0;">as</span> la
+
+<span style="color: #a0522d;">A</span> = np.array([1,2,-3])
+<span style="color: #a0522d;">C</span> = np.array([0,2,-4])
+
+<span style="color: #a020f0;">return</span> np.arccos(np.dot(A, C) / (la.norm(A) * la.norm(C))) * 180.0 / np.pi
+</pre>
+</div>
+<p>
+17.023866185
+</p>
+</div>
+</div>
+
+<div id="outline-container-org55845c5" class="outline-3">
+<h3 id="org55845c5"><span class="section-number-3">5.4</span> </h3>
+<div class="outline-text-3" id="text-5-4">
+\begin{align*}
+\mathbf{A} \times \mathbf{C} &= \left \lvert \begin{bmatrix}
+\mathbf{i} & \mathbf{j} & \mathbf{k} \\
+1 & 2 & -3 \\
+0 & 2 & -4
+\end{bmatrix} \right \rvert \\
+& = \left ( -8 + 6 \right ) \mathbf{i}
+- \left ( -4 - 0 \right ) \mathbf{j}
++ \left ( 2 - 0 \right ) \mathbf{k} = -2\mathbf{i} + 4\mathbf{j} + 2\mathbf{k}
+\end{align*}
+</div>
+</div>
+
+<div id="outline-container-orgd35ef1e" class="outline-3">
+<h3 id="orgd35ef1e"><span class="section-number-3">5.5</span> </h3>
+<div class="outline-text-3" id="text-5-5">
+\begin{align*}
+\mathbf{A} \cdot \left ( \mathbf{B} \times \mathbf{C} \right ) 
+&= \mathbf{A} \cdot \left \lvert \begin{bmatrix}
+\mathbf{i} & \mathbf{j} & \mathbf{k} \\
+2 & -4 & 0  \\
+0 &  2 & -4
+\end{bmatrix} \right \rvert \\
+& = \left ( -4 \right )^2 \mathbf{i}
+- \left ( -8 - 0 \right ) \mathbf{j}
++ \left ( 4 - 0 \right ) \mathbf{k}
+= \begin{bmatrix} 1 \\ 2 \\ -3 \end{bmatrix} \cdot \begin{bmatrix} 16 \\ 8 \\ 4 \end{bmatrix}
+= 16 + 16 - 12 = 20
+\end{align*}
+</div>
+</div>
+
+<div id="outline-container-org807611b" class="outline-3">
+<h3 id="org807611b"><span class="section-number-3">5.6</span> </h3>
+<div class="outline-text-3" id="text-5-6">
+<p>
+From the previous question, we have 
+</p>
+
+\begin{align*}
+\mathbf{B} \times \mathbf{C} = \begin{bmatrix} 16 \\ 8 \\ 4 \end{bmatrix}
+\end{align*}
+
+<p>
+and therefore
+</p>
+
+\begin{align*}
+\mathbf{A} \times \left ( \mathbf{B} \times \mathbf{C} \right ) 
+&= \left \lvert \begin{bmatrix}
+\mathbf{i} & \mathbf{j} & \mathbf{k} \\
+1  &  2 & -3  \\
+16 &  8 &  4
+\end{bmatrix} \right \rvert \\
+& = \left ( 8 + 24 \right ) \mathbf{i}
+- \left ( 4 + 48 \right ) \mathbf{j}
++ \left ( 8 - 32 \right ) \mathbf{k}
+= \begin{bmatrix} 32 \\ -52 \\ -24 \end{bmatrix}
+\end{align*}
+</div>
+</div>
+
+<div id="outline-container-org60052c7" class="outline-3">
+<h3 id="org60052c7"><span class="section-number-3">5.7</span> </h3>
+<div class="outline-text-3" id="text-5-7">
+\begin{align*}
+\mathbf{i} \times \mathbf{B}
+&= \left \lvert \begin{bmatrix}
+\mathbf{i} & \mathbf{j} & \mathbf{k} \\
+1 &  0 & 0  \\
+2 & -4 & 0
+\end{bmatrix} \right \rvert \\
+& = \left ( 0 - 0 \right ) \mathbf{i}
+- \left ( 0 - 0 \right ) \mathbf{j}
++ \left ( -4 - 0 \right ) \mathbf{k}
+= \begin{bmatrix} 0 \\ 0 \\ -4 \end{bmatrix}
+\end{align*}
+</div>
+</div>
+
+<div id="outline-container-org98119a2" class="outline-3">
+<h3 id="org98119a2"><span class="section-number-3">5.8</span> </h3>
+<div class="outline-text-3" id="text-5-8">
+\begin{align*}
+\left ( \mathbf{A} \times \mathbf{j} \right ) \cdot \mathbf{k}
+&= \left \lvert \begin{bmatrix}
+\mathbf{i} & \mathbf{j} & \mathbf{k} \\
+1 &  2 & -3  \\
+0 &  1 & 0
+\end{bmatrix} \right \rvert \\
+& = \left ( 0 + 3 \right ) \mathbf{i}
+- \left ( 0 - 0 \right ) \mathbf{j}
++ \left ( 1 - 0 \right ) \mathbf{k}
+= \begin{bmatrix} 0 \\ 0 \\ 1 \end{bmatrix}
+\end{align*}
 </div>
 </div>
 </div>
