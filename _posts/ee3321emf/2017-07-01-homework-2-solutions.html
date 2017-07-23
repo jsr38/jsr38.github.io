@@ -1,0 +1,176 @@
+---
+layout: page
+category : ee3321solutions
+tagline: "EE3321 Electromagnetic Field Theory Solutions 2"
+tags : [solutions, ee3321, emtheory]
+---
+<p>
+{% include JB/setup %}
+</p>
+
+<p>
+These are my solutions to the problems from <a href="http://emlab.utep.edu/ee3321emf/Homework%202%20--%20Vector%20Calculus.pdf">Homework 2</a> .
+</p>
+
+<a href="{{ site.url }}/assets/ee3321emf/Homework 2 -- Vector Calculus.pdf">Homework 2</a>
+
+
+<div id="outline-container-orgb49ec62" class="outline-2">
+<h2 id="orgb49ec62"><span class="section-number-2">1</span> </h2>
+<div class="outline-text-2" id="text-1">
+<ol class="org-ol">
+<li>Scalar Field</li>
+<li>Scalar Field</li>
+<li>Vector Field</li>
+<li>Vector Field</li>
+<li>Vector Field</li>
+<li>Vector Field</li>
+</ol>
+</div>
+</div>
+
+<div id="outline-container-org512d435" class="outline-2">
+<h2 id="org512d435"><span class="section-number-2">2</span> </h2>
+<div class="outline-text-2" id="text-2">
+<ol class="org-ol">
+<li></li>
+</ol>
+\begin{align*}
+\nabla \cdot \mathbf{D} & = \frac{\partial}{\partial x} D_x + \frac{\partial}{\partial y} D_y + \frac{\partial}{\partial z} D_z \\
+& = \frac{\partial}{\partial x} 2x^2y + \frac{\partial}{\partial y} 3x^2y^2 + 0  \\
+& = 4xy + 6x^2y
+\end{align*}
+
+<p>
+The cube is the region \(1 < x\),\(y\),\(z < 1.2\) and therefore the centre of the cube is the point \(\begin{bmatrix} 1.1 \\ 1.1 \\ 1.1 \end{bmatrix}\).
+</p>
+\begin{align*}
+\nabla \cdot \mathbf{D} \Big \rvert _{x,y,z=1.1} & = 4\left(1.1\right)^2 + 6 \left ( 1.1 \right ) ^3
+\end{align*}
+
+<div class="org-src-container">
+<pre class="src src-python"><span style="color: #a020f0;">return</span> 4 * 1.1 ** 2 + 6 * 1.1 ** 3
+</pre>
+</div>
+<p>
+12.826
+</p>
+
+<ol class="org-ol">
+<li></li>
+</ol>
+
+<p>
+In cylindrical coordinates we have
+</p>
+
+\begin{align*}
+\nabla \cdot \mathbf{D}  & = \frac{1}{\rho} \frac{\partial \left ( \rho D_{\rho} \right )}{\partial \rho}
++ \frac{1}{\rho} \frac{\partial D_{\phi} }{\partial \phi}
++ \frac{\partial D_{z}}{\partial z} \\
+& = \frac{1}{\rho} \frac{\partial}{\partial \rho} 5 \rho z^2 
++ 0
++ \frac{\partial}{\partial z} 10 \rho z\\
+& = \frac{5 z^2}{\rho} + 10 \rho  \\
+\nabla \cdot \mathbf{D} \Big \rvert _{\rho = 3, \phi = -45 ^{\circ} , z = 5} & = \frac {5 \left ( 5 \right ) ^2 }{3} + 10 \cdot 3
+\end{align*}
+
+
+<div class="org-src-container">
+<pre class="src src-python"><span style="color: #a020f0;">return</span> (5 * 5 ** 2) / 3 + 10 * 3
+</pre>
+</div>
+<p>
+71
+</p>
+
+<ol class="org-ol">
+<li></li>
+</ol>
+<p>
+In spherical coordinates we have 
+</p>
+\begin{align*}
+\nabla \cdot \mathbf{D}  & = \frac{1}{r^2} \frac{\partial \left ( r^2 D_{r} \right )}{\partial r}
++ \frac{1}{r \sin \theta} \frac{\partial}{\partial \theta} \left ( D_{\theta} \sin \theta \right )
++ \frac{1}{r \sin \theta} \frac{\partial D_{\phi}}{\partial \phi} \\
+& = \frac{1}{r^2} \frac{\partial \left ( r^2 D_{r} \right )}{\partial r} 
++ 0
++ 0  \\
+& = \frac{1}{r^2} \frac{\partial }{\partial r} \frac{Q r^2}{4 \pi r^2} \\
+& = 0 \\
+\end{align*}
+
+<p>
+For \(r \ne 0\).  Taken in the limit \(\lim _{r \rightarrow 0}\):
+</p>
+\begin{align*}
+\lim _{r \rightarrow 0} \nabla \cdot \mathbf{D}  & = \lim _{r \rightarrow 0} \frac{1}{r^2} \frac{\partial }{\partial r} \frac{Q r^2}{4 \pi r^2} = \infty
+\end{align*}
+</div>
+</div>
+
+<div id="outline-container-orge017048" class="outline-2">
+<h2 id="orge017048"><span class="section-number-2">3</span> </h2>
+<div class="outline-text-2" id="text-3">
+<ol class="org-ol">
+<li></li>
+</ol>
+
+\begin{align*}
+\nabla V  & = \left ( \frac{\partial}{\partial x} \left ( 2xy^2z^3 + 3 \ln \left ( x^2 + 2y^2 + 3z^2 \right ) \right ),
+\frac{\partial}{\partial y} \left ( 2xy^2z^3 + 3 \ln \left ( x^2 + 2y^2 + 3z^2 \right ) \right ),
+\frac{\partial}{\partial z} \left ( 2xy^2z^3 + 3 \ln \left ( x^2 + 2y^2 + 3z^2 \right ) \right ) \right ) \\
+ & = \left ( 2y^2z^3 + \frac{3 \left ( 2x \right )}{ x^2 + 2y^2 + 3z^2 },
+4xyz^3 + \frac{3 \left ( 4y \right )}{ x^2 + 2y^2 + 3z^2 },
+6xy^2z^2 + \frac{3 \left ( 6z \right )}{ x^2 + 2y^2 + 3z^2 } \right ) \\
+ & = \left ( 2y^2z^3 + \frac{6x}{ x^2 + 2y^2 + 3z^2 },
+4xyz^3 + \frac{12y}{ x^2 + 2y^2 + 3z^2 },
+6xy^2z^2 + \frac{18z}{ x^2 + 2y^2 + 3z^2 } \right )
+\end{align*}
+
+<div class="org-src-container">
+<pre class="src src-python"><span style="color: #a020f0;">import</span> numpy <span style="color: #a020f0;">as</span> np
+
+<span style="color: #a0522d;">x</span> = 3
+<span style="color: #a0522d;">y</span> = 2
+<span style="color: #a0522d;">z</span> = -1
+
+<span style="color: #a020f0;">return</span> [2 * y**2 * z**3 + 6 * x / (x**2 + 2 * y**2 + 3 * z**2),
+4 * x * y * z**3 + 12 * y / (x**2 + 2 * y**2 + 3 * z**2),
+6 * x * y**2 * z**2 + 18 * z / (x**2 + 2 * y**2 + 3 * z**2)]
+</pre>
+</div>
+
+<p>
+And we have
+</p>
+\begin{align*}
+\nabla V \Big \rvert _{x = 3, y = 2, z = -1} &= \begin{bmatrix} -8\\-23\\71 \end{bmatrix}
+\end{align*}
+
+<ol class="org-ol">
+<li></li>
+</ol>
+
+<p>
+In spherical coordinates we have
+</p>
+
+\begin{align*}
+\nabla V &= \frac{\partial V}{\partial r} \hat{\mathbf{r}} 
++ \frac{1}{r} \frac{\partial V}{\partial \theta} \hat{\mathbf{\theta}} 
++ \frac{1}{r \sin \theta} \frac{\partial V}{\partial \phi} \hat{\mathbf{\phi}} \\
+&= \frac{0.6 \cdot 80}{ r ^{0.4} } \hat{\mathbf{r}}  + 0 + 0
+\end{align*}
+</div>
+</div>
+
+<div id="outline-container-orgee4f409" class="outline-2">
+<h2 id="orgee4f409"><span class="section-number-2">4</span> </h2>
+<div class="outline-text-2" id="text-4">
+<ol class="org-ol">
+<li></li>
+</ol>
+</div>
+</div>

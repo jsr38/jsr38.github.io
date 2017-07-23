@@ -1,0 +1,419 @@
+---
+layout: page
+category : emsim
+tagline: "necpp MoM simulation of an air band monopole"
+tags : [mom, necpp, emtheory]
+---
+<p>
+{% include JB/setup %}
+</p>
+
+<div id="outline-container-orgff31ac9" class="outline-2">
+<h2 id="orgff31ac9"><span class="section-number-2">1</span> Calculations</h2>
+<div class="outline-text-2" id="text-1">
+<div class="org-src-container">
+<pre class="src src-python"><span style="color: #a020f0;">return</span> <span style="color: #8b2252;">"{0:0.3f}"</span>.<span style="color: #483d8b;">format</span>(3e8 / 118e6 / 4)
+</pre>
+</div>
+<p>
+0.636
+</p>
+
+<p>
+Approximate monopole length in metres.
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-org20da060" class="outline-2">
+<h2 id="org20da060"><span class="section-number-2">2</span> Perfect ground \(\frac{\lambda}{4}\) monopole</h2>
+<div class="outline-text-2" id="text-2">
+<div class="org-src-container">
+<pre class="src src-python" id="org15c0276"><span style="color: #a020f0;">from</span> argparse <span style="color: #a020f0;">import</span> ArgumentParser
+<span style="color: #a020f0;">from</span> PyNEC <span style="color: #a020f0;">import</span> *
+
+<span style="color: #a020f0;">import</span> logging
+<span style="color: #a020f0;">import</span> matplotlib.pyplot <span style="color: #a020f0;">as</span> plt
+<span style="color: #a020f0;">import</span> numpy <span style="color: #a020f0;">as</span> np
+<span style="color: #a020f0;">import</span> scipy.optimize
+<span style="color: #a020f0;">import</span> sys
+</pre>
+</div>
+
+<p>
+The following are simulation parameters, fundamental constants and derived parameters used by the simulation.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python" id="orgff18e97"><span style="color: #a0522d;">C</span> = 299792458
+<span style="color: #8b2252;">"""float: c (ms^1), universal physical constant for speed of light in a vacuum.</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">FREQ</span> = 118.2
+<span style="color: #8b2252;">"""float: f (s^-1), the excitation frequency applied to the test situation.</span>
+
+<span style="color: #8b2252;">Current value is chosen for the Airband frequency assign to TWR @ SOU</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">BANDWIDTH</span> = 10.0
+<span style="color: #8b2252;">"""float: f (s^-1), the bandwidth over which the matching network should operate.</span>
+
+<span style="color: #8b2252;">Current value is arbitrary.</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">GROUND_CONDUCTIVITY</span> = 0.002
+<span style="color: #8b2252;">"""float: sigma (S), electrical conductivity of ground.</span>
+
+<span style="color: #8b2252;">Current value is something like that experienced around the upper Eastern</span>
+<span style="color: #8b2252;">seaboard of the United States.  Real valued conductivity is a function of</span>
+<span style="color: #8b2252;">angular frequency (omega) so this value should be altered to something realistic</span>
+<span style="color: #8b2252;"> based on our excitation frequency above.</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">GROUND_DIELECTRIC</span> = 10
+<span style="color: #8b2252;">"""float: epsilon_r (dimensionless), electrical dielectric 'constant' of ground.</span>
+
+<span style="color: #8b2252;">Strictly, this is the real part of the ground relative permittivity.</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">BASE</span> = 0.1
+<span style="color: #8b2252;">"""float: offset (m) from the ground in the z direction.</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">LENGTH</span> = 0.63
+<span style="color: #8b2252;">"""float: total length (m) of monopole in z direction.</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">CONDUCTIVITY</span> = 1.45e6
+<span style="color: #8b2252;">"""float: sigma (S), electrical conductivity of stainless steel.</span>
+
+<span style="color: #8b2252;">Real valued conductivity is a function of angular frequency (omega) so this</span>
+<span style="color: #8b2252;">value should be altered to something realistic based on our excitation frequency</span>
+<span style="color: #8b2252;"> above.</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">R_W</span> = 0.002
+<span style="color: #8b2252;">"""float: r_w, (m), initial wire radius."""</span>
+
+<span style="color: #a0522d;">WAVELENGTH</span> = C / FREQ
+<span style="color: #8b2252;">"""float: lambda, (m)"""</span>
+
+<span style="color: #a0522d;">Z0</span> = 50
+<span style="color: #8b2252;">"""float: Z_0 (Ohms), feedline characteristic impedance."""</span>
+</pre>
+</div>
+
+<p>
+This function simply computes \(\Gamma\), the reflection coefficient for a 
+particular antenna scenario given characteristic impedance of the transmission
+line.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python" id="org52b7ac4"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">reflection_coefficient</span>(z, z0):
+    <span style="color: #a020f0;">return</span> np.<span style="color: #483d8b;">abs</span>((z - z0) / (z + z0))
+</pre>
+</div>
+
+<p>
+We construct the antenna geometry, in this case a single wire oriented in the 
+positive z direction.  The ground is imperfect having finite conductivity.
+We excite the antenna from the first segment (closest to the ground) and
+compute a radiation pattern and input parameters across a band of frequencies
+$&plusmn; 5$MHz around the design centre frequency.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python" id="orgd2578c2"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">geometry</span>(frequency, base, length, r_w):
+
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">creation of a nec context</span>
+    <span style="color: #a0522d;">context</span>=nec_context()
+
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">get the associated geometry</span>
+    <span style="color: #a0522d;">geo</span> = context.get_geometry()
+
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">add wires to the geometry</span>
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"Add wire {} {} {} "</span>.<span style="color: #483d8b;">format</span>(base, base + length,
+                                      r_w))
+    geo.wire(0, 36, 0.0, 0.0, base, 0.0, 0.0, base + length, r_w, 1.0, 1.0)
+    context.geometry_complete(0)
+
+    context.gn_card(0, 0, GROUND_DIELECTRIC, GROUND_CONDUCTIVITY,
+                    0, 0, 0, 0)
+
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">add a "ex" card to specify an excitation</span>
+    context.ex_card(0, 0, 1, 0, 0,
+                    1.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">add a "fr" card to specify the frequency </span>
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">context.fr_card(0, int(BANDWIDTH), FREQ - BANDWIDTH / 2.0, 1.0)</span>
+    context.fr_card(0, 1, frequency, 0.0)
+
+    <span style="color: #a020f0;">return</span> context
+</pre>
+</div>
+
+
+<div class="org-src-container">
+<pre class="src src-python" id="org8f7c3b1"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">impedance</span>(frequency, base, length, r_w):
+
+    <span style="color: #a0522d;">context</span> = geometry(frequency, base, length, r_w)
+    context.xq_card(0)
+
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">get the input_parameters</span>
+    <span style="color: #a0522d;">ip</span> = context.get_input_parameters(0)
+    <span style="color: #a0522d;">z</span> = ip.get_impedance()[0]
+
+    <span style="color: #a020f0;">return</span> z
+</pre>
+</div>
+
+
+<div class="org-src-container">
+<pre class="src src-python" id="org6fe20c4"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">cost_function</span>(x):
+
+    <span style="color: #a0522d;">length</span> = np.exp(x[0])   <span style="color: #b22222;"># </span><span style="color: #b22222;">length &gt;= 0</span>
+    <span style="color: #a0522d;">base</span> = np.exp(x[1])   <span style="color: #b22222;"># </span><span style="color: #b22222;">base &gt;= 0</span>
+    <span style="color: #a0522d;">z</span> = impedance(FREQ, base, length, R_W)
+
+    <span style="color: #a020f0;">return</span> reflection_coefficient(z, Z0)
+</pre>
+</div>
+
+<p>
+The main optimisation function below minimises the reflection coefficient 
+with respect to the antenna length.  Unbounded minimisation with a 
+Nelder-Mead simplex algorithm found alleged minima `far' from our desired
+length at around \(\lambda\) and moving the initial value from $1.0$m to \(0.5\) 
+found minima around \(\frac{\lambda}{2}\).  We therefore attempt a bounded 
+minimisation around the \(\frac{\lambda}{4}\) point with $0.4 &le; x<sub>0</sub> &le; 0.7$m
+</p>
+
+
+<div class="org-src-container">
+<pre class="src src-python" id="org35db085"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">optimise_antenna</span>():
+
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Starting value </span>
+    <span style="color: #a0522d;">freq</span> = FREQ
+    <span style="color: #a0522d;">bounds</span> = [(np.log(0.4), np.log(0.7)),
+              (np.log(0.01), np.log(5.0))]
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Carry out the minimization</span>
+    <span style="color: #a0522d;">result</span> = scipy.optimize.differential_evolution(cost_function, bounds)
+
+    <span style="color: #a0522d;">log_length</span> = result.x[0]
+    <span style="color: #a0522d;">log_base</span> = result.x[1]
+    <span style="color: #a0522d;">length</span> = np.exp(log_length)
+    <span style="color: #a0522d;">base</span> = np.exp(log_base)
+    <span style="color: #a0522d;">z</span> = impedance(freq, base, length, R_W)
+
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"Impedance at base={0:.2f}, length={1:.2f} : ({2:6.1f},{3:+6.1f}i) Ohms"</span>
+          .<span style="color: #483d8b;">format</span>(base, length, z.real, z.imag))
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"Reflection coefficient Gamma={0:0.2f}"</span>
+          .<span style="color: #483d8b;">format</span>(reflection_coefficient(z, Z0)))
+
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"z: {0}"</span>.<span style="color: #483d8b;">format</span>(z))
+
+    <span style="color: #a020f0;">return</span> length, base, z
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org8d23f86" class="outline-2">
+<h2 id="org8d23f86"><span class="section-number-2">3</span> Compute the radiation pattern for the optimised antenna and plot</h2>
+<div class="outline-text-2" id="text-3">
+<div class="org-src-container">
+<pre class="src src-python" id="org526499b"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">plot_radiation_pattern</span>(context):
+
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">add a "rp" card to specify radiation pattern sampling parameters </span>
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">and to cause program execution</span>
+    context.rp_card(0, 91, 1, 0, 5, 0, 0, 0.0, 45.0, 4.0, 2.0, 1.0, 0.0)
+
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">get the radiation_pattern</span>
+    <span style="color: #a0522d;">rp</span> = context.get_radiation_pattern(0)
+
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Gains are in decibels</span>
+    <span style="color: #a0522d;">gains_db</span> = rp.get_gain()
+    <span style="color: #a0522d;">gains</span> = 10.0**(gains_db / 10.0)
+    <span style="color: #a0522d;">thetas</span> = rp.get_theta_angles() * 3.1415 / 180.0
+    <span style="color: #a0522d;">phis</span> = rp.get_phi_angles() * 3.1415 / 180.0
+
+    <span style="color: #a0522d;">ax</span> = plt.subplot(111, polar=<span style="color: #008b8b;">True</span>)
+    ax.plot(thetas, gains[:,0], color=<span style="color: #8b2252;">'r'</span>, linewidth=3)
+    ax.grid(<span style="color: #008b8b;">True</span>)
+
+    ax.set_title(<span style="color: #8b2252;">"Gain at an elevation of 45 degrees"</span>, va=<span style="color: #8b2252;">'bottom'</span>)
+    plt.savefig(<span style="color: #8b2252;">'../images/RadiationPattern.png'</span>)
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">plt.show()</span>
+</pre>
+</div>
+
+<figure>
+  <img src="{{ site.url }}/assets/RadiationPattern.png" alt="Radiation Pattern Slice">	
+  <figcaption>Radiation Pattern Slice at 45 degrees elevation</figcaption>
+</figure>
+</div>
+</div>
+
+<div id="outline-container-org3989a4d" class="outline-2">
+<h2 id="org3989a4d"><span class="section-number-2">4</span> Compute antenna performance sensitivity to realised length</h2>
+</div>
+
+<div id="outline-container-org17c956b" class="outline-2">
+<h2 id="org17c956b"><span class="section-number-2">5</span> Compute antenna performance sensitivity (bandwith) to wire thickness</h2>
+</div>
+
+<div id="outline-container-org7d93fb5" class="outline-2">
+<h2 id="org7d93fb5"><span class="section-number-2">6</span> Compute a suitable bandpass impedance matching network</h2>
+<div class="outline-text-2" id="text-6">
+<div class="org-src-container">
+<pre class="src src-python" id="orgecb62ed"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">compute_bp_matching_network</span>(z0, zl):
+    <span style="color: #a020f0;">return</span> 0.0
+</pre>
+</div>
+
+
+<div class="org-src-container">
+<pre class="src src-python" id="org953669d"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">main</span>():
+
+    <span style="color: #a0522d;">parser</span> = ArgumentParser(description=<span style="color: #8b2252;">"Optimise monopole and compute matching network."</span>)
+    <span style="color: #a0522d;">args</span> = parser.parse_args()
+
+    <span style="color: #a0522d;">length</span>, <span style="color: #a0522d;">base</span>, <span style="color: #a0522d;">zl</span> = optimise_antenna()
+
+    <span style="color: #a0522d;">context</span> = geometry(FREQ, length, base, R_W)
+    plot_radiation_pattern(context)
+    compute_bp_matching_network(Z0, zl)
+
+    <span style="color: #a020f0;">return</span> 0
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-shell" id="orgd27295f">python airbandmonopole.py 2&gt;&amp;1
+true
+</pre>
+</div>
+
+<pre class="example">
+airbandmonopole.py:200: RuntimeWarning: overflow encountered in power
+  gains = 10.0**(gains_db / 10.0)
+Add wire 0.06280444741037301 0.5230596161778193 0.002 
+Add wire 0.0459070641659082 0.48565431422142047 0.002 
+Add wire 0.40578058074967316 0.9878992930314189 0.002 
+Add wire 0.020146342862195642 0.6244855220548581 0.002 
+Add wire 0.010726509020096604 0.5475627586653838 0.002 
+Add wire 0.9899193857042913 1.6191673652576208 0.002 
+Add wire 0.06887924943294127 0.5734282327390108 0.002 
+Add wire 2.3019045025823717 2.8784145427956114 0.002 
+Add wire 0.18098786835648165 0.783490944852078 0.002 
+Add wire 0.026276455269245682 0.546956128393165 0.002 
+Add wire 2.029791739716368 2.5696756182123566 0.002 
+Add wire 3.3858755538006347 3.802087761193606 0.002 
+Add wire 0.29945769495365127 0.993546689268212 0.002 
+Add wire 0.03958490684614449 0.4475224241726964 0.002 
+Add wire 4.492908644156973 5.157372551098732 0.002 
+Add wire 1.6774954380259817 2.133054118922032 0.002 
+Add wire 0.01839219341197598 0.6397550369610019 0.002 
+Add wire 0.01333452804655483 0.6959110566788773 0.002 
+Add wire 0.029564387480640164 0.546723911455684 0.002 
+Add wire 1.4344487936329617 1.9323640065172814 0.002 
+Add wire 0.48743128054947926 1.0408387636106529 0.002 
+Add wire 0.807130682390408 1.2335112837855515 0.002 
+Add wire 2.7608929096668375 3.1924871834673194 0.002 
+Add wire 0.08601316829073795 0.5753171030513545 0.002 
+Add wire 0.12977044056610773 0.6105985119747691 0.002 
+Add wire 0.19128336378466418 0.7558961602776788 0.002 
+Add wire 0.6588661569895364 1.3051424551262067 0.002 
+Add wire 0.60750706833058 1.0795274223535296 0.002 
+Add wire 0.23038942474711682 0.6361008837482554 0.002 
+Add wire 0.11566097754925414 0.7656712110072317 0.002 
+Add wire 0.011429213894744794 0.4963639378204478 0.002 
+Add wire 0.18805250880382976 0.8152193523144032 0.002 
+Add wire 0.03148990809353487 0.49859102266811767 0.002 
+Add wire 0.022541969259461916 0.6268811484521244 0.002 
+Add wire 0.011708745159547401 0.4797724861091381 0.002 
+Add wire 0.011092009982395448 0.6103126422081532 0.002 
+Add wire 0.06887924943294127 0.5387893583813118 0.002 
+Add wire 0.029686900437885144 0.7015241139634485 0.002 
+Add wire 0.13468902345613273 0.7977386399494769 0.002 
+Add wire 0.030155655350887666 0.6184747260404185 0.002 
+Add wire 0.0376952729112142 0.5617434461547696 0.002 
+Add wire 0.3729188864965451 0.7891310938895166 0.002 
+Add wire 2.150029646545291 2.741082921263913 0.002 
+Add wire 0.10529786642662624 0.7282975219364208 0.002 
+Add wire 0.01863146831198775 0.5923266566449673 0.002 
+Add wire 1.6774954380259817 2.300236105016464 0.002 
+Add wire 0.8907688201622432 1.492383122295632 0.002 
+Add wire 0.10049688454347187 0.5910687450319264 0.002 
+Add wire 0.06252126064723143 0.5805073456038045 0.002 
+Add wire 0.10837903862456563 0.5877840789203612 0.002 
+Add wire 0.015777586873289944 0.5691850699344634 0.002 
+Add wire 0.807130682390408 1.4768032782732143 0.002 
+Add wire 0.060566007142591964 0.5755423052990937 0.002 
+Add wire 0.9321927721680251 1.357704429410136 0.002 
+Add wire 0.050874427681598985 0.6015745598370233 0.002 
+Add wire 0.054383528496959925 0.6189963249899746 0.002 
+Add wire 0.1681020360725224 0.6237123758552929 0.002 
+Add wire 0.010400329418505402 0.48242068344145506 0.002 
+Add wire 2.0071501070943207 2.5978287414785197 0.002 
+Add wire 0.11566097754925414 0.5618122222215127 0.002 
+Add wire 0.01333452804655483 0.6959110566788773 0.002 
+Add wire 0.01333452804655483 0.6959110635046426 0.002 
+Add wire 0.013334528179900109 0.6959110568122225 0.002 
+Add wire 0.013334131149177097 0.6963664237108711 0.002 
+Add wire 0.013334131149177097 0.6963664305411941 0.002 
+Add wire 0.013334131282518407 0.6963664238442123 0.002 
+Add wire 0.013333733523441952 0.6968236878664849 0.002 
+Add wire 0.013333733523441952 0.6968236947013844 0.002 
+Add wire 0.013333733656779286 0.6968236879998222 0.002 
+Add wire 0.013332143139070407 0.6986558131988339 0.002 
+Add wire 0.013332143139070407 0.6986558200520706 0.002 
+Add wire 0.01333214327239184 0.6986558133321553 0.002 
+Add wire 0.013325783498292892 0.7060336448255586 0.002 
+Add wire 0.013325783498292892 0.7060336517526372 0.002 
+Add wire 0.013325783631550727 0.7060336449588164 0.002 
+Add wire 0.013319572253269182 0.7133195722532691 0.002 
+Add wire 0.013319572253269182 0.7133195792532692 0.002 
+Add wire 0.013319572386464903 0.7133195723864648 0.002 
+Add wire 0.013319133805305377 0.7133191338053053 0.002 
+Add wire 0.013319133805305377 0.7133191408053053 0.002 
+Add wire 0.013319133938496715 0.7133191339384967 0.002 
+Add wire 0.013317380157771825 0.7133173801577718 0.002 
+Add wire 0.013317380157771825 0.7133173871577718 0.002 
+Add wire 0.013317380290945627 0.7133173802909456 0.002 
+Add wire 0.013310367876252309 0.7133103678762522 0.002 
+Add wire 0.013310367876252309 0.7133103748762523 0.002 
+Add wire 0.013310368009355988 0.713310368009356 0.002 
+Add wire 0.013282355653984694 0.7132823556539847 0.002 
+Add wire 0.013282355653984694 0.7132823626539847 0.002 
+Add wire 0.01328235578680825 0.7132823557868082 0.002 
+Add wire 0.013170895054388503 0.7131708950543885 0.002 
+Add wire 0.013170895054388503 0.7131709020543885 0.002 
+Add wire 0.013170895186097454 0.7131708951860974 0.002 
+Add wire 0.012734327854745344 0.7127343278547453 0.002 
+Add wire 0.012734327854745344 0.7127343348547454 0.002 
+Add wire 0.012734327982088622 0.7127343279820886 0.002 
+Add wire 0.01112804766701598 0.711128047667016 0.002 
+Add wire 0.01112804766701598 0.711128054667016 0.002 
+Add wire 0.011128047778296455 0.7111280477782964 0.002 
+Add wire 0.010000000000000004 0.71 0.002 
+Add wire 0.010000000000000004 0.710000007 0.002 
+Add wire 0.010000000100000005 0.7100000001 0.002 
+Add wire 0.010000000000000004 0.71 0.002 
+Impedance at base=0.01, length=0.70 : (  40.7,-4849.2i) Ohms
+Reflection coefficient Gamma=1.00
+z: (40.656826374068366-4849.208572216333j)
+Add wire 0.7 0.71 0.002
+</pre>
+</div>
+</div>
