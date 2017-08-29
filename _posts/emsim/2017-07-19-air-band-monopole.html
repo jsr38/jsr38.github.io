@@ -139,7 +139,7 @@ We construct the antenna geometry, in this case a single wire oriented in the po
     <span style="color: #b22222;">#</span><span style="color: #b22222;">add wires to the geometry</span>
     <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"Add wire {} {} {} "</span>.<span style="color: #483d8b;">format</span>(base, base + length,
                                       r_w))
-    geo.wire(1, 360, 0.0, 0.0, base, 0.0, 0.0, base + length, r_w, 1.0, 1.0)
+    geo.wire(1, 36, 0.0, 0.0, base, 0.0, 0.0, base + length, r_w, 1.0, 1.0)
     context.geometry_complete(1)
 
     <span style="color: #b22222;"># </span><span style="color: #b22222;">Group I cards</span>
@@ -210,13 +210,6 @@ The main optimisation function below minimises the reflection coefficient with r
     <span style="color: #a0522d;">base</span> = np.exp(log_base)
     <span style="color: #a0522d;">z</span> = impedance(freq, base, length, R_W)
 
-    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"Impedance at base={0:.2f}, length={1:.2f} : ({2:6.1f},{3:+6.1f}i) Ohms"</span>
-          .<span style="color: #483d8b;">format</span>(base, length, z.real, z.imag))
-    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"Reflection coefficient Gamma={0:0.2f}"</span>
-          .<span style="color: #483d8b;">format</span>(reflection_coefficient(z, Z0)))
-
-    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"z: {0}"</span>.<span style="color: #483d8b;">format</span>(z))
-
     <span style="color: #a020f0;">return</span> length, base, z
 </pre>
 </div>
@@ -232,11 +225,12 @@ The main optimisation function below minimises the reflection coefficient with r
     <span style="color: #b22222;"># </span><span style="color: #b22222;">Group III cards</span>
     <span style="color: #b22222;">#</span><span style="color: #b22222;">add a "rp" card to specify radiation pattern sampling parameters </span>
     <span style="color: #b22222;"># </span><span style="color: #b22222;">and to cause program execution</span>
-    context.rp_card(calc_mode=0, n_theta=720, n_phi=180, output_format=0,
-                    normalization=5, D=0, A=0,
+    context.rp_card(calc_mode=0, n_theta=180, n_phi=720, output_format=0,
+                    normalization=0, D=0, A=0,
                     theta0=0.0, delta_theta=0.5, phi0=0.0, delta_phi=0.5,
-                    radial_distance=2.0, gain_norm=0.0)
+                    radial_distance=0.0, gain_norm=0.0)
 
+    context.xq_card(0)
     <span style="color: #b22222;">#</span><span style="color: #b22222;">get the radiation_pattern</span>
     <span style="color: #a0522d;">rp</span> = context.get_radiation_pattern(0)
 
@@ -248,31 +242,45 @@ The main optimisation function below minimises the reflection coefficient with r
     <span style="color: #a0522d;">thetas</span> = rp.get_theta_angles() * 3.1415 / 180.0
     <span style="color: #a0522d;">phis</span> = rp.get_phi_angles() * 3.1415 / 180.0
 
-    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'thetas.shape = {0}'</span>.<span style="color: #483d8b;">format</span>(thetas.shape))
-    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'phis.shape = {0}'</span>.<span style="color: #483d8b;">format</span>(phis.shape))
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'thetas.shape = {0} [{1},{2}]'</span>
+          .<span style="color: #483d8b;">format</span>(thetas.shape, thetas[0], thetas[<span style="color: #483d8b;">len</span>(thetas)-1]))
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'phis.shape = {0} [{1},{2}]'</span>
+          .<span style="color: #483d8b;">format</span>(phis.shape, phis[0], phis[<span style="color: #483d8b;">len</span>(phis)-1]))
 
     <span style="color: #a0522d;">fig</span> = plt.figure()
 
     <span style="color: #b22222;"># </span><span style="color: #b22222;">Plot 2d polar plots</span>
     <span style="color: #a0522d;">ax</span> = fig.add_subplot(2, 2, 1, projection=<span style="color: #8b2252;">'polar'</span>)
-    ax.plot(thetas, gains[:,0], color=<span style="color: #8b2252;">'r'</span>, linewidth=3)
+    ax.plot(phis, gains[180//4 - 1,:], color=<span style="color: #8b2252;">'r'</span>, linewidth=3)
     ax.grid(<span style="color: #008b8b;">True</span>)
-    ax.set_title(<span style="color: #8b2252;">"Gain at an elevation of 0 degrees"</span>, va=<span style="color: #8b2252;">'bottom'</span>)
-
-    <span style="color: #a0522d;">ax</span> = fig.add_subplot(2, 2, 2, projection=<span style="color: #8b2252;">'polar'</span>)
-    ax.plot(thetas, gains[:,44], color=<span style="color: #8b2252;">'r'</span>, linewidth=3)
-    ax.grid(<span style="color: #008b8b;">True</span>)
+    ax.set_rmax(1.0)
     ax.set_title(<span style="color: #8b2252;">"Gain at an elevation of 22.5 degrees"</span>, va=<span style="color: #8b2252;">'bottom'</span>)
 
-    <span style="color: #a0522d;">ax</span> = fig.add_subplot(2, 2, 3, projection=<span style="color: #8b2252;">'polar'</span>)
-    ax.plot(thetas, gains[:,88], color=<span style="color: #8b2252;">'r'</span>, linewidth=3)
+    <span style="color: #a0522d;">ax</span> = fig.add_subplot(2, 2, 2, projection=<span style="color: #8b2252;">'polar'</span>)
+    ax.plot(np.concatenate((thetas, np.pi - thetas)),
+            np.concatenate((gains[:,0], gains[:,360])),
+            color=<span style="color: #8b2252;">'r'</span>, linewidth=3)
     ax.grid(<span style="color: #008b8b;">True</span>)
+    ax.set_rmax(1.5)
+    ax.set_thetalim(thetamin=0.0, thetamax=180.0)
+    ax.set_thetagrids([0.0, 30.0, 60.0, 90.0, 120.0, 150.0, 180.0])
+    ax.set_title(<span style="color: #8b2252;">"Gain sliced through xz-plane"</span>, va=<span style="color: #8b2252;">'bottom'</span>)
+
+    <span style="color: #a0522d;">ax</span> = fig.add_subplot(2, 2, 3, projection=<span style="color: #8b2252;">'polar'</span>)
+    ax.plot(phis, gains[180//2 - 1,:], color=<span style="color: #8b2252;">'r'</span>, linewidth=3)
+    ax.grid(<span style="color: #008b8b;">True</span>)
+    ax.set_rmax(1.0)
     ax.set_title(<span style="color: #8b2252;">"Gain at an elevation of 45 degrees"</span>, va=<span style="color: #8b2252;">'bottom'</span>)
 
     <span style="color: #a0522d;">ax</span> = fig.add_subplot(2, 2, 4, projection=<span style="color: #8b2252;">'polar'</span>)
-    ax.plot(thetas, gains[:,134], color=<span style="color: #8b2252;">'r'</span>, linewidth=3)
+    ax.plot(np.concatenate((thetas, np.pi - thetas)),
+            np.concatenate((gains[:,180], gains[:,540])),
+            color=<span style="color: #8b2252;">'r'</span>, linewidth=3)
     ax.grid(<span style="color: #008b8b;">True</span>)
-    ax.set_title(<span style="color: #8b2252;">"Gain at an elevation of 67.5 degrees"</span>, va=<span style="color: #8b2252;">'bottom'</span>)
+    ax.set_rmax(1.5)
+    ax.set_thetalim(thetamin=0.0, thetamax=180.0)
+    ax.set_thetagrids([0.0, 30.0, 60.0, 90.0, 120.0, 150.0, 180.0])
+    ax.set_title(<span style="color: #8b2252;">"Gain sliced through yz-plane"</span>, va=<span style="color: #8b2252;">'bottom'</span>)
 
     plt.savefig(<span style="color: #8b2252;">'../images/lambda_on_4_monopole_polar_plots.png'</span>)
     plt.gcf().clear()
@@ -280,13 +288,12 @@ The main optimisation function below minimises the reflection coefficient with r
 
     <span style="color: #b22222;"># </span><span style="color: #b22222;">Plot 3d radiation pattern.</span>
     <span style="color: #a0522d;">R</span> = gains.T
-    <span style="color: #a0522d;">THETA</span>, <span style="color: #a0522d;">PHI</span> = np.meshgrid(rp.get_theta_angles(),
-                             rp.get_phi_angles())
+    <span style="color: #a0522d;">THETA</span>, <span style="color: #a0522d;">PHI</span> = np.meshgrid(thetas, phis)
     <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'THETA.shape = {0}'</span>.<span style="color: #483d8b;">format</span>(THETA.shape))
     <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'PHI.shape = {0}'</span>.<span style="color: #483d8b;">format</span>(PHI.shape))
-    <span style="color: #a0522d;">X</span> = R * np.sin(PHI) * np.cos(THETA)
-    <span style="color: #a0522d;">Y</span> = R * np.sin(PHI) * np.sin(THETA)
-    <span style="color: #a0522d;">Z</span> = R * np.cos(PHI)
+    <span style="color: #a0522d;">X</span> = R * np.sin(THETA) * np.cos(PHI)
+    <span style="color: #a0522d;">Y</span> = R * np.sin(THETA) * np.sin(PHI)
+    <span style="color: #a0522d;">Z</span> = R * np.cos(THETA)
     <span style="color: #a0522d;">ax</span> = fig.add_subplot(1, 1, 1, projection=<span style="color: #8b2252;">'3d'</span>)
     <span style="color: #b22222;"># </span><span style="color: #b22222;">Plot the surface.</span>
     ax.plot_surface(X, Y, Z, rstride=1, cstride=1, 
@@ -298,6 +305,7 @@ The main optimisation function below minimises the reflection coefficient with r
     plt.savefig(<span style="color: #8b2252;">'../images/lambda_on_4_monopole_3d_gain_plot.png'</span>)
     <span style="color: #b22222;">#</span><span style="color: #b22222;">plt.show()</span>
     plt.gcf().clear()
+    plt.close(fig)
 </pre>
 </div>
 
@@ -359,8 +367,18 @@ And polar plots of gain at various elevation angles
 
     <span style="color: #b22222;">#</span><span style="color: #b22222;">length, base, zl = optimise_antenna()</span>
 
-    <span style="color: #b22222;">#</span><span style="color: #b22222;">context = geometry(FREQ, length, base, R_W)</span>
-    <span style="color: #a0522d;">context</span> = geometry(FREQ, 0.63, 2.0, 0.02)
+    <span style="color: #a0522d;">length</span>, <span style="color: #a0522d;">base</span> = [0.63, 0.05]
+    <span style="color: #a0522d;">z</span> = impedance(FREQ, base, length, R_W)
+
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"Impedance at base={0:.2f}, length={1:.2f} : ({2:6.1f},{3:+6.1f}i) Ohms"</span>
+          .<span style="color: #483d8b;">format</span>(base, length, z.real, z.imag))
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"Reflection coefficient Gamma={0:0.2f}"</span>
+          .<span style="color: #483d8b;">format</span>(reflection_coefficient(z, Z0)))
+
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"z: {0}"</span>.<span style="color: #483d8b;">format</span>(z))
+
+    <span style="color: #a0522d;">context</span> = geometry(FREQ, base, length, R_W)
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">context = geometry(FREQ, 2.0, 0.63, 0.02)</span>
     plot_radiation_pattern(context)
     <span style="color: #b22222;">#</span><span style="color: #b22222;">compute_bp_matching_network(Z0, zl)</span>
 
@@ -375,13 +393,16 @@ true
 </div>
 
 <pre class="example">
-Add wire 0.63 2.63 0.02 
-gains_db.shape = (720, 180)
-thetas.shape = (720,)
-phis.shape = (180,)
-THETA.shape = (180, 720)
-PHI.shape = (180, 720)
-
+Add wire 0.05 0.68 0.02 
+Impedance at base=0.05, length=0.63 : (   4.5,-271.5i) Ohms
+Reflection coefficient Gamma=0.99
+z: (4.497436205645977-271.4562982643568j)
+Add wire 0.05 0.68 0.02 
+gains_db.shape = (180, 720)
+thetas.shape = (180,) [0.0,1.5620236111111114]
+phis.shape = (720,) [0.0,6.274273611111111]
+THETA.shape = (720, 180)
+PHI.shape = (720, 180)
 </pre>
 </div>
 </div>
