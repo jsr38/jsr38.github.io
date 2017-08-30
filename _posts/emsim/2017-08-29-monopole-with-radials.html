@@ -1,0 +1,421 @@
+---
+layout: page
+category : emsim
+tagline: "necpp MoM simulation of an air band monopole"
+tags : [mom, necpp, emtheory]
+---
+<p>
+{% include JB/setup %}
+</p>
+
+<div id="outline-container-org20c5e37" class="outline-2">
+<h2 id="org20c5e37"><span class="section-number-2">1</span> Calculations</h2>
+<div class="outline-text-2" id="text-1">
+<div class="org-src-container">
+<pre class="src src-python"><span style="color: #a020f0;">return</span> <span style="color: #8b2252;">"{0:0.3f}"</span>.<span style="color: #483d8b;">format</span>(3e8 / 118e6 / 4)
+</pre>
+</div>
+<p>
+0.636
+</p>
+
+<p>
+Approximate monopole length in metres.
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-org9b21756" class="outline-2">
+<h2 id="org9b21756"><span class="section-number-2">2</span> Perfect ground \(\frac{\lambda}{4}\) monopole</h2>
+<div class="outline-text-2" id="text-2">
+<div class="org-src-container">
+<pre class="src src-python" id="org5e522f1"><span style="color: #a020f0;">from</span> argparse <span style="color: #a020f0;">import</span> ArgumentParser
+<span style="color: #a020f0;">from</span> PyNEC <span style="color: #a020f0;">import</span> *
+
+<span style="color: #a020f0;">import</span> logging
+<span style="color: #a020f0;">import</span> matplotlib.pyplot <span style="color: #a020f0;">as</span> plt
+<span style="color: #a020f0;">import</span> mpl_toolkits.mplot3d.axes3d <span style="color: #a020f0;">as</span> axes3d
+<span style="color: #a020f0;">import</span> numpy <span style="color: #a020f0;">as</span> np
+<span style="color: #a020f0;">import</span> scipy.optimize
+<span style="color: #a020f0;">import</span> sys
+</pre>
+</div>
+
+<p>
+The following are simulation parameters, fundamental constants and derived parameters used by the simulation.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python" id="orgb9840fb"><span style="color: #a0522d;">C</span> = 299792458
+<span style="color: #8b2252;">"""float: c (ms^1), universal physical constant for speed of light in a vacuum.</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">FREQ</span> = 118.2
+<span style="color: #8b2252;">"""float: f (s^-1), the excitation frequency applied to the test situation.</span>
+
+<span style="color: #8b2252;">Current value is chosen for the Airband frequency assign to TWR @ SOU</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">BANDWIDTH</span> = 10.0
+<span style="color: #8b2252;">"""float: f (s^-1), the bandwidth over which the matching network should operate.</span>
+
+<span style="color: #8b2252;">Current value is arbitrary.</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">GROUND_CONDUCTIVITY</span> = 0.002
+<span style="color: #8b2252;">"""float: sigma (S), electrical conductivity of ground.</span>
+
+<span style="color: #8b2252;">Current value is something like that experienced around the upper Eastern</span>
+<span style="color: #8b2252;">seaboard of the United States.  Real valued conductivity is a function of</span>
+<span style="color: #8b2252;">angular frequency (omega) so this value should be altered to something realistic</span>
+<span style="color: #8b2252;"> based on our excitation frequency above.</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">GROUND_DIELECTRIC</span> = 10
+<span style="color: #8b2252;">"""float: epsilon_r (dimensionless), electrical dielectric 'constant' of ground.</span>
+
+<span style="color: #8b2252;">Strictly, this is the real part of the ground relative permittivity.</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">BASE</span> = 0.1
+<span style="color: #8b2252;">"""float: offset (m) from the ground in the z direction.</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">LENGTH</span> = 0.63
+<span style="color: #8b2252;">"""float: total length (m) of monopole in z direction.</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">CONDUCTIVITY</span> = 1.45e6
+<span style="color: #8b2252;">"""float: sigma (S), electrical conductivity of stainless steel.</span>
+
+<span style="color: #8b2252;">Real valued conductivity is a function of angular frequency (omega) so this</span>
+<span style="color: #8b2252;">value should be altered to something realistic based on our excitation frequency</span>
+<span style="color: #8b2252;"> above.</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">R_W</span> = 0.002
+<span style="color: #8b2252;">"""float: r_w, (m), initial wire radius."""</span>
+
+<span style="color: #a0522d;">WAVELENGTH</span> = C / FREQ
+<span style="color: #8b2252;">"""float: lambda, (m)"""</span>
+
+<span style="color: #a0522d;">Z0</span> = 50
+<span style="color: #8b2252;">"""float: Z_0 (Ohms), feedline characteristic impedance."""</span>
+</pre>
+</div>
+
+<p>
+This function simply computes \(\Gamma\), the reflection coefficient for a particular antenna scenario given characteristic impedance of the transmission line.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python" id="org8dc10d5"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">reflection_coefficient</span>(z, z0):
+    <span style="color: #a020f0;">return</span> np.<span style="color: #483d8b;">abs</span>((z - z0) / (z + z0))
+</pre>
+</div>
+
+<p>
+We construct the antenna geometry, in this case a single wire oriented in the positive z direction with the addition of N radials located equiangularly around the z-axis.  The ground is imperfect having finite conductivity.  We excite the antenna from the first segment (closest to the ground) and compute a radiation pattern and input parameters across a band of frequencies \(\pm 5\)MHz around the design centre frequency.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python" id="orga4a42e5"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">geometry</span>(base, length, r_w, radial_len,
+             radial_offset, n_radials, theta_radial):
+
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">creation of a nec context</span>
+    <span style="color: #a0522d;">context</span>=nec_context()
+
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">get the associated geometry</span>
+    <span style="color: #a0522d;">geo</span> = context.get_geometry()
+
+    <span style="color: #a020f0;">assert</span> (0.636 / 36 / r_w) &gt; 8
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">add driven element</span>
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"Add wire {} {} {} "</span>.<span style="color: #483d8b;">format</span>(base, base + length,
+                                      r_w))
+    geo.wire(1, 36, 0.0, 0.0, base, 0.0, 0.0, base + length, r_w, 1.0, 1.0)
+
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">add grounded radials</span>
+    <span style="color: #a0522d;">delta_theta</span> = 2 * np.pi / n_radials
+    <span style="color: #a020f0;">for</span> n <span style="color: #a020f0;">in</span> <span style="color: #483d8b;">range</span>(n_radials):
+        <span style="color: #a0522d;">x</span> = radial_len * np.cos(delta_theta * n)
+        <span style="color: #a0522d;">y</span> = radial_len * np.sin(delta_theta * n)
+        <span style="color: #a0522d;">z</span> = radial_len * np.cos(theta_radial)
+        geo.wire(1 + (n + 1), 36,
+                 0.0, 0.0, base - radial_offset,
+                 x, y, base - radial_offset - z,
+                 r_w, 1.0, 1.0)
+
+    context.geometry_complete(1)
+
+    <span style="color: #a020f0;">return</span> context
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-python" id="org1af6923"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">set_sim_params</span>(context):
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Group I cards</span>
+    context.ld_card(5, 0, 0, 0, CONDUCTIVITY, 0.0, 0.0)
+    context.gn_card(0, 0, GROUND_DIELECTRIC, GROUND_CONDUCTIVITY,
+                    0, 0, 0, 0)
+
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">add a "fr" card to specify the frequency </span>
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">context.fr_card(0, int(BANDWIDTH), FREQ - BANDWIDTH / 2.0, 1.0)</span>
+    context.fr_card(0, 1, frequency, 0.0)
+
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Group II cards</span>
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">add a "ex" card to specify an excitation</span>
+    context.ex_card(0, 0, 1, 0, 0,
+                    1.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-python" id="org06b3003"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">impedance</span>(frequency, base, length, r_w):
+
+    <span style="color: #a0522d;">context</span> = geometry(frequency, base, length, r_w)
+
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Group III cards</span>
+    context.xq_card(0)
+
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">get the input_parameters</span>
+    <span style="color: #a0522d;">ip</span> = context.get_input_parameters(0)
+    <span style="color: #a0522d;">z</span> = ip.get_impedance()[0]
+
+    <span style="color: #a020f0;">return</span> z
+</pre>
+</div>
+
+
+<div class="org-src-container">
+<pre class="src src-python" id="orgdc1b444"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">cost_function</span>(x):
+
+    <span style="color: #a0522d;">length</span> = np.exp(x[0])   <span style="color: #b22222;"># </span><span style="color: #b22222;">length &gt;= 0</span>
+    <span style="color: #a0522d;">base</span> = np.exp(x[1])   <span style="color: #b22222;"># </span><span style="color: #b22222;">base &gt;= 0</span>
+    <span style="color: #a0522d;">z</span> = impedance(FREQ, base, length, R_W)
+
+    <span style="color: #a020f0;">return</span> reflection_coefficient(z, Z0)
+</pre>
+</div>
+
+<p>
+The main optimisation function below minimises the reflection coefficient with respect to the antenna length.  Unbounded minimisation with a Nelder-Mead simplex algorithm found alleged minima `far' from our desired length at around \(\lambda\) and moving the initial value from $1.0$m to \(0.5\) found minima around \(\frac{\lambda}{2}\).  We therefore attempt a bounded minimisation around the \(\frac{\lambda}{4}\) point with $0.4 &le; x<sub>0</sub> &le; 0.7$m
+</p>
+
+
+<div class="org-src-container">
+<pre class="src src-python" id="org49ce6e4"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">optimise_antenna</span>():
+
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Starting value </span>
+    <span style="color: #a0522d;">freq</span> = FREQ
+    <span style="color: #a0522d;">bounds</span> = [(np.log(0.4), np.log(0.7)),
+              (np.log(0.5), np.log(0.6))]
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Carry out the minimization</span>
+    <span style="color: #a0522d;">result</span> = scipy.optimize.differential_evolution(cost_function, bounds)
+
+    <span style="color: #a0522d;">log_length</span> = result.x[0]
+    <span style="color: #a0522d;">log_base</span> = result.x[1]
+    <span style="color: #a0522d;">length</span> = np.exp(log_length)
+    <span style="color: #a0522d;">base</span> = np.exp(log_base)
+    <span style="color: #a0522d;">z</span> = impedance(freq, base, length, R_W)
+
+    <span style="color: #a020f0;">return</span> length, base, z
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgefbd295" class="outline-2">
+<h2 id="orgefbd295"><span class="section-number-2">3</span> Compute the radiation pattern for the optimised antenna and plot</h2>
+<div class="outline-text-2" id="text-3">
+<div class="org-src-container">
+<pre class="src src-python" id="orgcb542cf"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">plot_radiation_pattern</span>(context):
+
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Group III cards</span>
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">add a "rp" card to specify radiation pattern sampling parameters </span>
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">and to cause program execution</span>
+    context.rp_card(calc_mode=0, n_theta=180, n_phi=720, output_format=0,
+                    normalization=0, D=0, A=0,
+                    theta0=0.0, delta_theta=0.5, phi0=0.0, delta_phi=0.5,
+                    radial_distance=0.0, gain_norm=0.0)
+
+    context.xq_card(0)
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">get the radiation_pattern</span>
+    <span style="color: #a0522d;">rp</span> = context.get_radiation_pattern(0)
+
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Gains are in decibels</span>
+    <span style="color: #a0522d;">gains_db</span> = rp.get_gain()
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'gains_db.shape = {0}'</span>.<span style="color: #483d8b;">format</span>(gains_db.shape))
+
+    <span style="color: #a0522d;">gains</span> = 10.0**(gains_db / 10.0)
+    <span style="color: #a0522d;">thetas</span> = rp.get_theta_angles() * 3.1415 / 180.0
+    <span style="color: #a0522d;">phis</span> = rp.get_phi_angles() * 3.1415 / 180.0
+
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'thetas.shape = {0} [{1},{2}]'</span>
+          .<span style="color: #483d8b;">format</span>(thetas.shape, thetas[0], thetas[<span style="color: #483d8b;">len</span>(thetas)-1]))
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'phis.shape = {0} [{1},{2}]'</span>
+          .<span style="color: #483d8b;">format</span>(phis.shape, phis[0], phis[<span style="color: #483d8b;">len</span>(phis)-1]))
+
+    <span style="color: #a0522d;">fig</span> = plt.figure()
+
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Plot 2d polar plots</span>
+    <span style="color: #a0522d;">ax</span> = fig.add_subplot(2, 2, 1, projection=<span style="color: #8b2252;">'polar'</span>)
+    ax.plot(phis, gains[180//4 - 1,:], color=<span style="color: #8b2252;">'r'</span>, linewidth=3)
+    ax.grid(<span style="color: #008b8b;">True</span>)
+    ax.set_rmax(1.0)
+    ax.set_title(<span style="color: #8b2252;">"Gain at an elevation of 22.5 degrees"</span>, va=<span style="color: #8b2252;">'bottom'</span>)
+
+    <span style="color: #a0522d;">ax</span> = fig.add_subplot(2, 2, 2, projection=<span style="color: #8b2252;">'polar'</span>)
+    ax.plot(np.concatenate((thetas, np.pi - thetas)),
+            np.concatenate((gains[:,0], gains[:,360])),
+            color=<span style="color: #8b2252;">'r'</span>, linewidth=3)
+    ax.grid(<span style="color: #008b8b;">True</span>)
+    ax.set_rmax(1.5)
+    ax.set_thetalim(thetamin=0.0, thetamax=180.0)
+    ax.set_thetagrids([0.0, 30.0, 60.0, 90.0, 120.0, 150.0, 180.0])
+    ax.set_title(<span style="color: #8b2252;">"Gain sliced through xz-plane"</span>, va=<span style="color: #8b2252;">'bottom'</span>)
+
+    <span style="color: #a0522d;">ax</span> = fig.add_subplot(2, 2, 3, projection=<span style="color: #8b2252;">'polar'</span>)
+    ax.plot(phis, gains[180//2 - 1,:], color=<span style="color: #8b2252;">'r'</span>, linewidth=3)
+    ax.grid(<span style="color: #008b8b;">True</span>)
+    ax.set_rmax(1.0)
+    ax.set_title(<span style="color: #8b2252;">"Gain at an elevation of 45 degrees"</span>, va=<span style="color: #8b2252;">'bottom'</span>)
+
+    <span style="color: #a0522d;">ax</span> = fig.add_subplot(2, 2, 4, projection=<span style="color: #8b2252;">'polar'</span>)
+    ax.plot(np.concatenate((thetas, np.pi - thetas)),
+            np.concatenate((gains[:,180], gains[:,540])),
+            color=<span style="color: #8b2252;">'r'</span>, linewidth=3)
+    ax.grid(<span style="color: #008b8b;">True</span>)
+    ax.set_rmax(1.5)
+    ax.set_thetalim(thetamin=0.0, thetamax=180.0)
+    ax.set_thetagrids([0.0, 30.0, 60.0, 90.0, 120.0, 150.0, 180.0])
+    ax.set_title(<span style="color: #8b2252;">"Gain sliced through yz-plane"</span>, va=<span style="color: #8b2252;">'bottom'</span>)
+
+    plt.savefig(<span style="color: #8b2252;">'../images/monopole_radials_polar_plots.png'</span>)
+    plt.gcf().clear()
+
+
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Plot 3d radiation pattern.</span>
+    <span style="color: #a0522d;">R</span> = gains.T
+    <span style="color: #a0522d;">THETA</span>, <span style="color: #a0522d;">PHI</span> = np.meshgrid(thetas, phis)
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'THETA.shape = {0}'</span>.<span style="color: #483d8b;">format</span>(THETA.shape))
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'PHI.shape = {0}'</span>.<span style="color: #483d8b;">format</span>(PHI.shape))
+    <span style="color: #a0522d;">X</span> = R * np.sin(THETA) * np.cos(PHI)
+    <span style="color: #a0522d;">Y</span> = R * np.sin(THETA) * np.sin(PHI)
+    <span style="color: #a0522d;">Z</span> = R * np.cos(THETA)
+    <span style="color: #a0522d;">ax</span> = fig.add_subplot(1, 1, 1, projection=<span style="color: #8b2252;">'3d'</span>)
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Plot the surface.</span>
+    ax.plot_surface(X, Y, Z, rstride=1, cstride=1, 
+                    cmap=plt.get_cmap(<span style="color: #8b2252;">'jet'</span>), linewidth=0,
+                    antialiased=<span style="color: #008b8b;">False</span>, alpha=0.5)
+    ax.grid(<span style="color: #008b8b;">True</span>)
+
+    ax.set_title(<span style="color: #8b2252;">"3d gain plot"</span>, va=<span style="color: #8b2252;">'bottom'</span>)
+    plt.savefig(<span style="color: #8b2252;">'../images/monopole_radials_3d_gain_plot.png'</span>)
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">plt.show()</span>
+    plt.gcf().clear()
+    plt.close(fig)
+</pre>
+</div>
+
+<figure>
+  <img src="{{ site.url }}/assets/monopole_radials_3d_gain_plot.png" alt="3d radiation pattern plot">	
+  <figcaption>3d radiation pattern plot</figcaption>
+</figure>
+
+
+<div id="org84e7c1f" class="figure">
+<p><img src="../images/monopole_radials_3d_gain_plot.png" alt="monopole_radials_3d_gain_plot.png" />
+</p>
+<p><span class="figure-number">Figure 1: </span>3d gain plot pattern - radiated</p>
+</div>
+
+
+<p>
+And polar plots of gain at various elevation angles
+</p>
+
+<figure>
+  <img src="{{ site.url }}/assets/monopole_radials_polar_plots.png" alt="Radiation pattern slices">	
+  <figcaption>Radiation pattern slice at 45 degrees elevation</figcaption>
+</figure>
+
+
+<div id="org85d8368" class="figure">
+<p><img src="../images/monopole_radials_polar_plots.png" alt="monopole_radials_polar_plots.png" />
+</p>
+<p><span class="figure-number">Figure 2: </span>Polar plots of gain pattern at various elevation angles</p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org78e6bc1" class="outline-2">
+<h2 id="org78e6bc1"><span class="section-number-2">4</span> Compute antenna performance sensitivity to realised length</h2>
+</div>
+
+<div id="outline-container-org14b403d" class="outline-2">
+<h2 id="org14b403d"><span class="section-number-2">5</span> Compute antenna performance sensitivity (bandwith) to wire thickness</h2>
+</div>
+
+<div id="outline-container-org2fd7885" class="outline-2">
+<h2 id="org2fd7885"><span class="section-number-2">6</span> Compute a suitable bandpass impedance matching network</h2>
+<div class="outline-text-2" id="text-6">
+<div class="org-src-container">
+<pre class="src src-python" id="org4195f05"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">compute_bp_matching_network</span>(z0, zl):
+    <span style="color: #a020f0;">return</span> 0.0
+</pre>
+</div>
+
+
+<div class="org-src-container">
+<pre class="src src-python" id="orgb6eb3c0"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">main</span>():
+
+    <span style="color: #a0522d;">parser</span> = ArgumentParser(description=<span style="color: #8b2252;">"Optimise monopole and compute matching network."</span>)
+    <span style="color: #a0522d;">args</span> = parser.parse_args()
+
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">length, base, zl = optimise_antenna()</span>
+
+    <span style="color: #a0522d;">length</span>, <span style="color: #a0522d;">base</span> = [0.63, 0.05]
+    <span style="color: #a0522d;">z</span> = impedance(FREQ, base, length, R_W)
+
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"Impedance at base={0:.2f}, length={1:.2f} : ({2:6.1f},{3:+6.1f}i) Ohms"</span>
+          .<span style="color: #483d8b;">format</span>(base, length, z.real, z.imag))
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"Reflection coefficient Gamma={0:0.2f}"</span>
+          .<span style="color: #483d8b;">format</span>(reflection_coefficient(z, Z0)))
+
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"z: {0}"</span>.<span style="color: #483d8b;">format</span>(z))
+
+    <span style="color: #a0522d;">context</span> = geometry(FREQ, base, length, R_W)
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">context = geometry(FREQ, 2.0, 0.63, 0.02)</span>
+    plot_radiation_pattern(context)
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">compute_bp_matching_network(Z0, zl)</span>
+
+    <span style="color: #a020f0;">return</span> 0
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-shell" id="org03ade83">python monopoleradials.py 2&gt;&amp;1
+true
+</pre>
+</div>
+
+<pre class="example">
+Add wire 0.63 2.63 0.02 
+gains_db.shape = (720, 180)
+thetas.shape = (720,)
+phis.shape = (180,)
+THETA.shape = (180, 720)
+PHI.shape = (180, 720)
+</pre>
+</div>
+</div>

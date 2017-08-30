@@ -1,0 +1,64 @@
+---
+layout: post
+category : technical
+tagline: "Examining the radio spectrum in the local area with an RTL-SDR dongle"
+tags : [technical, sdr, rtl-sdr]
+---
+<p>
+{% include JB/setup %}
+</p>
+
+<div id="outline-container-orgd420dcf" class="outline-2">
+<h2 id="orgd420dcf"><span class="section-number-2">1</span> Get the source and build the software</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+There seem to be heaps of forks of rtl-sdr on github but judging from comments in the issue trackers, and the official osmocom homepage, <a href="https://osmocom.org/projects/sdr">https://osmocom.org/projects/sdr</a> the official repository is the one hosted by osmocom here  as noted on their wiki <a href="https://osmocom.org/projects/sdr/wiki/Rtl-sdr">https://osmocom.org/projects/sdr/wiki/Rtl-sdr</a>  there is an official github mirror which is <a href="https://github.com/steve-m/librtlsdr">https://github.com/steve-m/librtlsdr</a> .
+</p>
+
+<pre class="example" id="osmocom-rtlsdr-git">
+git clone git://git.osmocom.org/rtl-sdr.git
+</pre>
+
+<p>
+There is an implementation of individual stage gain setting specifically for R820T2 tuners which does not appear to have been merged into the official rtl-sdr codebase which lives here <a href="https://github.com/gat3way/r820tweak">https://github.com/gat3way/r820tweak</a> .  It uses LD_PRELOAD to load a modified librtlsdr.so (on Linux systems) and provides a python GUI to manipulate the register values at runtime.  I haven't experimented with this yet.
+</p>
+
+<p>
+To begin with, in order to not reinvent the wheel unnecessarily, I made use of some existing scanning tool <a href="https://github.com/EarToEarOak/RTLSDR-Scanner">https://github.com/EarToEarOak/RTLSDR-Scanner</a> which appears to be actively maintained at the time of writing.
+</p>
+
+<pre class="example" id="osmocom-rtlsdr-git">
+git clone git@github.com:EarToEarOak/RTLSDR-Scanner.git
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org3bfbdee" class="outline-2">
+<h2 id="org3bfbdee"><span class="section-number-2">2</span> Configure for an initial scan</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+The scanner software starts with default settings that produce a single sweep of the FM broadcast band for my current location.
+</p>
+
+
+<div class="figure">
+<p><img src="../images/rtlsdr_scanning_broadcastfm_screen.png" alt="rtlsdr_scanning_broadcastfm_screen.png" />
+</p>
+</div>
+
+<figure>
+  <img src="{{ site.url }}/assets/rtlsdr_scanning_broadcastfm_screen.png" alt="FM broadcast band sweep" width="75%">	
+  <figcaption>FM broadcast band sweep</figcaption>
+</figure>
+</div>
+</div>
+
+<div id="outline-container-org25c6b96" class="outline-2">
+<h2 id="org25c6b96"><span class="section-number-2">3</span> Intermodulation products and gain</h2>
+</div>
+
+
+
+<div id="outline-container-org6a9a602" class="outline-2">
+<h2 id="org6a9a602"><span class="section-number-2">4</span> Automating the scan</h2>
+</div>
