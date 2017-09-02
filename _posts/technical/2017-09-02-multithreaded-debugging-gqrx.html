@@ -1,0 +1,99 @@
+---
+layout: post
+category : technical
+tagline: "Multithreaded debugging of gqrx with gdb"
+tags : [technical, c++, gdb, sdr, gqrx]
+---
+<p>
+{% include JB/setup %}
+</p>
+
+<div id="outline-container-org404143e" class="outline-2">
+<h2 id="org404143e"><span class="section-number-2">1</span> Gqrx didn't want to start on my Ubuntu 17.04 system</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+At first I thought it might be peculiar to my build but SEGFAULT appeared with the Ubuntu provided package too.  Check that the problem is the same in both cases.
+</p>
+
+<pre class="example" id="source-built">
+Thread 1 "gqrx" received signal SIGSEGV, Segmentation fault.
+0x00007ffff638f858 in boost::asio::detail::task_io_service::shutdown_service() () from /usr/lib/x86_64-linux-gnu/libgnuradio-blocks.so.3.7.10
+(gdb) bt
+#0  0x00007ffff638f858 in boost::asio::detail::task_io_service::shutdown_service() () at /usr/lib/x86_64-linux-gnu/libgnuradio-blocks.so.3.7.10
+#1  0x00007ffff6392699 in boost::asio::detail::resolver_service_base::shutdown_service() () at /usr/lib/x86_64-linux-gnu/libgnuradio-blocks.so.3.7.10
+#2  0x00007ffff051a329 in  () at /usr/lib/x86_64-linux-gnu/libuhd.so.003
+#3  0x00007ffff07575ba in  () at /usr/lib/x86_64-linux-gnu/libuhd.so.003
+#4  0x00007ffff07679e1 in  () at /usr/lib/x86_64-linux-gnu/libuhd.so.003
+#5  0x00007ffff0766771 in  () at /usr/lib/x86_64-linux-gnu/libuhd.so.003
+#6  0x00007ffff07286c0 in  () at /usr/lib/x86_64-linux-gnu/libuhd.so.003
+#7  0x00007ffff08d3653 in uhd::device::find(uhd::device_addr_t const&amp;, uhd::device::device_filter_t) () at /usr/lib/x86_64-linux-gnu/libuhd.so.003
+#8  0x00007ffff677b7a3 in  () at /usr/lib/x86_64-linux-gnu/libgnuradio-osmosdr.so.0.1.4
+#9  0x00007ffff674d50b in osmosdr::device::find(osmosdr::device_t const&amp;) () at /usr/lib/x86_64-linux-gnu/libgnuradio-osmosdr.so.0.1.4
+#10 0x00005555556d82ae in CIoConfig::getDeviceList(std::map&lt;QString, QVariant, std::less&lt;QString&gt;, std::allocator&lt;std::pair&lt;QString const, QVariant&gt; &gt; &gt;&amp;) (devList=std::map with 0 elements) at ../src/qtgui/ioconfig.cpp:235
+#11 0x000055555559911f in MainWindow::MainWindow(QString, bool, QWidget*) (this=0x7fffffffdc00, cfgfile=..., edit_conf=false, parent=0x0)
+    at ../src/applications/gqrx/mainwindow.cpp:292
+#12 0x000055555558c7f7 in main(int, char**) (argc=1, argv=0x7fffffffe008) at ../src/applications/gqrx/main.cpp:142
+(gdb) info threads
+  Id   Target Id         Frame
+\ast{} 1    Thread 0x7ffff7efbd00 (LWP 4350) "gqrx" 0x00007ffff638f858 in boost::asio::detail::task_io_service::shutdown_service() ()
+   from /usr/lib/x86_64-linux-gnu/libgnuradio-blocks.so.3.7.10
+  2    Thread 0x7fffe2d19700 (LWP 4354) "QXcbEventReader" 0x00007ffff3317d8d in poll () at ../sysdeps/unix/syscall-template.S:84
+  3    Thread 0x7fffd760a700 (LWP 4355) "gmain" 0x00007ffff3317d8d in poll () at ../sysdeps/unix/syscall-template.S:84
+  4    Thread 0x7fffd6e09700 (LWP 4356) "gdbus" 0x00007ffff3317d8d in poll () at ../sysdeps/unix/syscall-template.S:84
+  5    Thread 0x7fffd63fb700 (LWP 4357) "dconf worker" 0x00007ffff3317d8d in poll () at ../sysdeps/unix/syscall-template.S:84
+  6    Thread 0x7fffd4d98700 (LWP 4358) "QDBusConnection" 0x00007ffff3317d8d in poll () at ../sysdeps/unix/syscall-template.S:84
+  7    Thread 0x7fffc56e4700 (LWP 4362) "threaded-ml" 0x00007ffff3317d8d in poll () at ../sysdeps/unix/syscall-template.S:84
+</pre>
+
+<p>
+The standard Ubuntu packaged <code class="src src-shell">gqrx</code> does not contain debug symbols so I referred to Ubuntu's advice <a href="https://wiki.ubuntu.com/Debug%20Symbol%20Packages">https://wiki.ubuntu.com/Debug Symbol Packages</a> .  Instead of using the Ubuntu script designed to attach to a running process and dump
+</p>
+
+<p>
+We note that the stack trace for the source built version is missing debug information for libuhd so we'll grab that as well as gqrx debug symbols. 
+</p>
+
+<pre class="example" id="url-example">
+http://emlab.utep.edu/ee3321emf.htm
+</pre>
+
+
+<pre class="example" id="ubuntu-built">
+Thread 1 "gqrx" received signal SIGSEGV, Segmentation fault.
+0x00007ffff6a83858 in boost::asio::detail::task_io_service::shutdown_service() () from /usr/lib/x86_64-linux-gnu/libgnuradio-blocks.so.3.7.10
+(gdb) bt
+#0  0x00007ffff6a83858 in boost::asio::detail::task_io_service::shutdown_service() () at /usr/lib/x86_64-linux-gnu/libgnuradio-blocks.so.3.7.10
+#1  0x00007ffff6a86699 in boost::asio::detail::resolver_service_base::shutdown_service() () at /usr/lib/x86_64-linux-gnu/libgnuradio-blocks.so.3.7.10
+#2  0x00007ffff0a01329 in  () at /usr/lib/x86_64-linux-gnu/libuhd.so.003
+#3  0x00007ffff0c3e5ba in  () at /usr/lib/x86_64-linux-gnu/libuhd.so.003
+#4  0x00007ffff0c4e9e1 in  () at /usr/lib/x86_64-linux-gnu/libuhd.so.003
+#5  0x00007ffff0c4d771 in  () at /usr/lib/x86_64-linux-gnu/libuhd.so.003
+#6  0x00007ffff0c0f6c0 in  () at /usr/lib/x86_64-linux-gnu/libuhd.so.003
+#7  0x00007ffff0dba653 in uhd::device::find(uhd::device_addr_t const&amp;, uhd::device::device_filter_t) () at /usr/lib/x86_64-linux-gnu/libuhd.so.003
+#8  0x00007ffff5e1b7a3 in  () at /usr/lib/x86_64-linux-gnu/libgnuradio-osmosdr.so.0.1.4
+#9  0x00007ffff5ded50b in osmosdr::device::find(osmosdr::device_t const&amp;) () at /usr/lib/x86_64-linux-gnu/libgnuradio-osmosdr.so.0.1.4
+#10 0x00005555556a173b in CIoConfig::getDeviceList(std::map&lt;QString, QVariant, std::less&lt;QString&gt;, std::allocator&lt;std::pair&lt;QString const, QVariant&gt; &gt; &gt;&amp;) (devList=std::map with 0 elements) at ./src/qtgui/ioconfig.cpp:235
+#11 0x000055555561548c in MainWindow::MainWindow(QString, bool, QWidget*) (this=0x7fffffffdbb0, cfgfile=..., edit_conf=&lt;optimized out&gt;, parent=&lt;optimized out&gt;)
+    at ./src/applications/gqrx/mainwindow.cpp:283
+#12 0x00005555555b70da in main(int, char**) (argc=&lt;optimized out&gt;, argv=&lt;optimized out&gt;) at ./src/applications/gqrx/main.cpp:142
+</pre>
+
+<p>
+Happily, we see that the stack traces are identical (up to address) so it seems to be failing in the same place.  
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgfe3901f" class="outline-2">
+<h2 id="orgfe3901f"><span class="section-number-2">2</span> Someone else has already identified the problem&#x2026;</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+It's to do with both libuhd and libgnuradio-blocks both supplying differing implementations of <code class="src src-cpp"><span style="color: #008b8b;">boost</span>::<span style="color: #008b8b;">asio</span>::<span style="color: #008b8b;">detail</span>::task_io_service</code>
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell" id="orga8ed746"><span style="color: #483d8b;">export</span> <span style="color: #a0522d;">LD_PRELOAD</span>=/usr/lib/x86_64-linux-gnu/libuhd.so.003
+</pre>
+</div>
+</div>
+</div>

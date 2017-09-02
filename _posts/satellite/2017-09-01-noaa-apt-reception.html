@@ -1,0 +1,81 @@
+---
+layout: post
+category : satellite
+tagline: "Notes on APT receiver specification"
+tags : [sdr, rtl-sdr, noaa, apt, vhf]
+---
+<p>
+{% include JB/setup %}
+</p>
+
+
+
+<div id="outline-container-org773cceb" class="outline-2">
+<h2 id="org773cceb"><span class="section-number-2">1</span> Weather satellite APT</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+What's all this for?  We want to receive weather satellite transmissions.  The source for detailed information I've used is <a href="http://noaasis.noaa.gov/NOAASIS/pubs/Users_Guide-Building_Receive_Stations_March_2009.pdf">http://noaasis.noaa.gov/NOAASIS/pubs/Users_Guide-Building_Receive_Stations_March_2009.pdf</a> <div id="noaaug"> .
+</p>
+
+<p>
+The currently operating Polar Operational Environmental Satellites POES are NOAA-15, NOAA-18 and NOAA-19 and operational status is found at <a href="http://www.ospo.noaa.gov/Operations/POES/status.html">http://www.ospo.noaa.gov/Operations/POES/status.html</a> .  These provide APT transmissions in the VHF at around 137MHz and HRPT on S-band.  The geostationary satellites currently operating are GOES-13 and GOES-15 (GOES-14 is in a storage orbit) which provide GVAR and LRIT services on S-band.
+</p>
+
+<p>
+The gpredict <a href="http://gpredict.oz9aec.net/">http://gpredict.oz9aec.net/</a> tool provides an extremely useful way of tracking these satellites.
+</p>
+
+
+<div class="figure">
+<p><img src="../images/gpredict_screenshot.png" alt="gpredict_screenshot.png" />
+</p>
+</div>
+
+<figure>
+  <img src="{{ site.url }}/assets/gpredict_screenshot.png" alt="gpredict" width="75%">
+  <figcaption>gpredict</figcaption>
+</figure>
+</div>
+</div>
+
+
+<div id="outline-container-orgeef386a" class="outline-2">
+<h2 id="orgeef386a"><span class="section-number-2">2</span> Receiver characteristics</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+The official documentation <a href="#noaaug">noaaug</a> provides information and guidance on receiver characteristics.
+</p>
+</div>
+
+<div id="outline-container-org41c2c2c" class="outline-3">
+<h3 id="org41c2c2c"><span class="section-number-3">2.1</span> Receiver frequency</h3>
+<div class="outline-text-3" id="text-2-1">
+<p>
+Documentation for POES states carrier deviation of \(\pm 17 \)kHz and doppler shift during a direct overhead pass of \(\pm 4.5\)kHz which yields a maximum carrier deviation of \(\pm 21.5 \)kHz.
+</p>
+
+<p>
+The frequencies of interest are 137.50, 137.62, 137.1, 137.9125 MHz inside the allocated band of 137-138MHz.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org4d9ac8c" class="outline-3">
+<h3 id="org4d9ac8c"><span class="section-number-3">2.2</span> Modulation scheme</h3>
+</div>
+
+
+
+<div id="outline-container-orge97db83" class="outline-3">
+<h3 id="orge97db83"><span class="section-number-3">2.3</span> Signal bandwidth</h3>
+</div>
+
+
+<div id="outline-container-org804087b" class="outline-3">
+<h3 id="org804087b"><span class="section-number-3">2.4</span> Receiver sensitivity</h3>
+</div>
+
+<div id="outline-container-org7d564a6" class="outline-3">
+<h3 id="org7d564a6"><span class="section-number-3">2.5</span> Receiver selectivity</h3>
+</div>
+</div>
