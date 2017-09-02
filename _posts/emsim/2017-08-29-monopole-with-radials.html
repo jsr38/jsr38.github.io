@@ -1,20 +1,15 @@
 ---
 layout: page
 category : emsim
-tagline: "necpp MoM simulation of an air band monopole"
+tagline: "necpp MoM simulation of a monpole with radial ground screen wires"
 tags : [mom, necpp, emtheory]
 ---
 <p>
 {% include JB/setup %}
 </p>
 
-<<<<<<< HEAD
 <div id="outline-container-org907f9a0" class="outline-2">
 <h2 id="org907f9a0"><span class="section-number-2">1</span> Calculations</h2>
-=======
-<div id="outline-container-org20c5e37" class="outline-2">
-<h2 id="org20c5e37"><span class="section-number-2">1</span> Calculations</h2>
->>>>>>> d5468985e86e960ab36760acf8b97e74c2e036e1
 <div class="outline-text-2" id="text-1">
 <div class="org-src-container">
 <pre class="src src-python"><span style="color: #a020f0;">return</span> <span style="color: #8b2252;">"{0:0.3f}"</span>.<span style="color: #483d8b;">format</span>(3e8 / 118e6 / 4)
@@ -31,19 +26,11 @@ Approximate monopole length in metres.
 </div>
 
 
-<<<<<<< HEAD
 <div id="outline-container-org4016b1e" class="outline-2">
 <h2 id="org4016b1e"><span class="section-number-2">2</span> Perfect ground \(\frac{\lambda}{4}\) monopole</h2>
 <div class="outline-text-2" id="text-2">
 <div class="org-src-container">
 <pre class="src src-python" id="org2929879"><span style="color: #a020f0;">from</span> argparse <span style="color: #a020f0;">import</span> ArgumentParser
-=======
-<div id="outline-container-org9b21756" class="outline-2">
-<h2 id="org9b21756"><span class="section-number-2">2</span> Perfect ground \(\frac{\lambda}{4}\) monopole</h2>
-<div class="outline-text-2" id="text-2">
-<div class="org-src-container">
-<pre class="src src-python" id="org5e522f1"><span style="color: #a020f0;">from</span> argparse <span style="color: #a020f0;">import</span> ArgumentParser
->>>>>>> d5468985e86e960ab36760acf8b97e74c2e036e1
 <span style="color: #a020f0;">from</span> PyNEC <span style="color: #a020f0;">import</span> *
 
 <span style="color: #a020f0;">import</span> logging
@@ -51,6 +38,7 @@ Approximate monopole length in metres.
 <span style="color: #a020f0;">import</span> mpl_toolkits.mplot3d.axes3d <span style="color: #a020f0;">as</span> axes3d
 <span style="color: #a020f0;">import</span> numpy <span style="color: #a020f0;">as</span> np
 <span style="color: #a020f0;">import</span> scipy.optimize
+<span style="color: #a020f0;">import</span> solid
 <span style="color: #a020f0;">import</span> sys
 </pre>
 </div>
@@ -60,11 +48,7 @@ The following are simulation parameters, fundamental constants and derived param
 </p>
 
 <div class="org-src-container">
-<<<<<<< HEAD
 <pre class="src src-python" id="orgcc184e4"><span style="color: #a0522d;">C</span> = 299792458
-=======
-<pre class="src src-python" id="orgb9840fb"><span style="color: #a0522d;">C</span> = 299792458
->>>>>>> d5468985e86e960ab36760acf8b97e74c2e036e1
 <span style="color: #8b2252;">"""float: c (ms^1), universal physical constant for speed of light in a vacuum.</span>
 
 <span style="color: #8b2252;">"""</span>
@@ -127,6 +111,9 @@ The following are simulation parameters, fundamental constants and derived param
 
 <span style="color: #a0522d;">Z0</span> = 50
 <span style="color: #8b2252;">"""float: Z_0 (Ohms), feedline characteristic impedance."""</span>
+
+<span style="color: #a0522d;">SEGMENTS</span> = 48
+<span style="color: #8b2252;">"""int: SEGMENTS , number of segments used in openscad rendering."""</span>
 </pre>
 </div>
 
@@ -135,11 +122,7 @@ This function simply computes \(\Gamma\), the reflection coefficient for a parti
 </p>
 
 <div class="org-src-container">
-<<<<<<< HEAD
 <pre class="src src-python" id="org886ffa0"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">reflection_coefficient</span>(z, z0):
-=======
-<pre class="src src-python" id="org8dc10d5"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">reflection_coefficient</span>(z, z0):
->>>>>>> d5468985e86e960ab36760acf8b97e74c2e036e1
     <span style="color: #a020f0;">return</span> np.<span style="color: #483d8b;">abs</span>((z - z0) / (z + z0))
 </pre>
 </div>
@@ -149,11 +132,7 @@ We construct the antenna geometry, in this case a single wire oriented in the po
 </p>
 
 <div class="org-src-container">
-<<<<<<< HEAD
 <pre class="src src-python" id="org0259f2f"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">geometry</span>(base, length, r_w, radial_len,
-=======
-<pre class="src src-python" id="orga4a42e5"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">geometry</span>(base, length, r_w, radial_len,
->>>>>>> d5468985e86e960ab36760acf8b97e74c2e036e1
              radial_offset, n_radials, theta_radial):
 
     <span style="color: #b22222;">#</span><span style="color: #b22222;">creation of a nec context</span>
@@ -162,11 +141,15 @@ We construct the antenna geometry, in this case a single wire oriented in the po
     <span style="color: #b22222;">#</span><span style="color: #b22222;">get the associated geometry</span>
     <span style="color: #a0522d;">geo</span> = context.get_geometry()
 
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">ensure that we meet validity criterion for</span>
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">thin wire aproximation (non-extended thin wire kernel)</span>
     <span style="color: #a020f0;">assert</span> (0.636 / 36 / r_w) &gt; 8
     <span style="color: #b22222;">#</span><span style="color: #b22222;">add driven element</span>
     <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"Add wire {} {} {} "</span>.<span style="color: #483d8b;">format</span>(base, base + length,
                                       r_w))
     geo.wire(1, 36, 0.0, 0.0, base, 0.0, 0.0, base + length, r_w, 1.0, 1.0)
+    <span style="color: #a0522d;">solid_geom</span> = translate([0,0,length/2 + base])        \
+                 cylinder(r=r_w, h=length, center=<span style="color: #008b8b;">True</span>)
 
     <span style="color: #b22222;">#</span><span style="color: #b22222;">add grounded radials</span>
     <span style="color: #a0522d;">delta_theta</span> = 2 * np.pi / n_radials
@@ -178,19 +161,19 @@ We construct the antenna geometry, in this case a single wire oriented in the po
                  0.0, 0.0, base - radial_offset,
                  x, y, base - radial_offset - z,
                  r_w, 1.0, 1.0)
+        <span style="color: #a0522d;">solid_geom</span> += rotate([0,theta_radial,delta_theta * n])  \
+                      translate([0,0,length/2 + base])          \
+                      cylinder(r=r_w, h=radial_len, center=<span style="color: #008b8b;">True</span>)
+
 
     context.geometry_complete(1)
 
-    <span style="color: #a020f0;">return</span> context
+    <span style="color: #a020f0;">return</span> context, solid_geom
 </pre>
 </div>
 
 <div class="org-src-container">
-<<<<<<< HEAD
 <pre class="src src-python" id="orge3314c0"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">set_sim_params</span>(context):
-=======
-<pre class="src src-python" id="org1af6923"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">set_sim_params</span>(context):
->>>>>>> d5468985e86e960ab36760acf8b97e74c2e036e1
     <span style="color: #b22222;"># </span><span style="color: #b22222;">Group I cards</span>
     context.ld_card(5, 0, 0, 0, CONDUCTIVITY, 0.0, 0.0)
     context.gn_card(0, 0, GROUND_DIELECTRIC, GROUND_CONDUCTIVITY,
@@ -208,11 +191,7 @@ We construct the antenna geometry, in this case a single wire oriented in the po
 </div>
 
 <div class="org-src-container">
-<<<<<<< HEAD
 <pre class="src src-python" id="org97a158c"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">impedance</span>(frequency, base, length, r_w):
-=======
-<pre class="src src-python" id="org06b3003"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">impedance</span>(frequency, base, length, r_w):
->>>>>>> d5468985e86e960ab36760acf8b97e74c2e036e1
 
     <span style="color: #a0522d;">context</span> = geometry(frequency, base, length, r_w)
 
@@ -229,11 +208,7 @@ We construct the antenna geometry, in this case a single wire oriented in the po
 
 
 <div class="org-src-container">
-<<<<<<< HEAD
 <pre class="src src-python" id="orga6265f2"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">cost_function</span>(x):
-=======
-<pre class="src src-python" id="orgdc1b444"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">cost_function</span>(x):
->>>>>>> d5468985e86e960ab36760acf8b97e74c2e036e1
 
     <span style="color: #a0522d;">length</span> = np.exp(x[0])   <span style="color: #b22222;"># </span><span style="color: #b22222;">length &gt;= 0</span>
     <span style="color: #a0522d;">base</span> = np.exp(x[1])   <span style="color: #b22222;"># </span><span style="color: #b22222;">base &gt;= 0</span>
@@ -249,11 +224,7 @@ The main optimisation function below minimises the reflection coefficient with r
 
 
 <div class="org-src-container">
-<<<<<<< HEAD
 <pre class="src src-python" id="org626e54a"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">optimise_antenna</span>():
-=======
-<pre class="src src-python" id="org49ce6e4"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">optimise_antenna</span>():
->>>>>>> d5468985e86e960ab36760acf8b97e74c2e036e1
 
     <span style="color: #b22222;"># </span><span style="color: #b22222;">Starting value </span>
     <span style="color: #a0522d;">freq</span> = FREQ
@@ -274,19 +245,11 @@ The main optimisation function below minimises the reflection coefficient with r
 </div>
 </div>
 
-<<<<<<< HEAD
 <div id="outline-container-org2f69aff" class="outline-2">
 <h2 id="org2f69aff"><span class="section-number-2">3</span> Compute the radiation pattern for the optimised antenna and plot</h2>
 <div class="outline-text-2" id="text-3">
 <div class="org-src-container">
 <pre class="src src-python" id="orgcb46ebc"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">plot_radiation_pattern</span>(context):
-=======
-<div id="outline-container-orgefbd295" class="outline-2">
-<h2 id="orgefbd295"><span class="section-number-2">3</span> Compute the radiation pattern for the optimised antenna and plot</h2>
-<div class="outline-text-2" id="text-3">
-<div class="org-src-container">
-<pre class="src src-python" id="orgcb542cf"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">plot_radiation_pattern</span>(context):
->>>>>>> d5468985e86e960ab36760acf8b97e74c2e036e1
 
     <span style="color: #b22222;"># </span><span style="color: #b22222;">Group III cards</span>
     <span style="color: #b22222;">#</span><span style="color: #b22222;">add a "rp" card to specify radiation pattern sampling parameters </span>
@@ -381,11 +344,7 @@ The main optimisation function below minimises the reflection coefficient with r
 </figure>
 
 
-<<<<<<< HEAD
 <div id="org8738e2d" class="figure">
-=======
-<div id="org84e7c1f" class="figure">
->>>>>>> d5468985e86e960ab36760acf8b97e74c2e036e1
 <p><img src="../images/monopole_radials_3d_gain_plot.png" alt="monopole_radials_3d_gain_plot.png" />
 </p>
 <p><span class="figure-number">Figure 1: </span>3d gain plot pattern - radiated</p>
@@ -402,11 +361,7 @@ And polar plots of gain at various elevation angles
 </figure>
 
 
-<<<<<<< HEAD
 <div id="org1b3a61c" class="figure">
-=======
-<div id="org85d8368" class="figure">
->>>>>>> d5468985e86e960ab36760acf8b97e74c2e036e1
 <p><img src="../images/monopole_radials_polar_plots.png" alt="monopole_radials_polar_plots.png" />
 </p>
 <p><span class="figure-number">Figure 2: </span>Polar plots of gain pattern at various elevation angles</p>
@@ -415,7 +370,6 @@ And polar plots of gain at various elevation angles
 </div>
 
 
-<<<<<<< HEAD
 <div id="outline-container-orgb15870c" class="outline-2">
 <h2 id="orgb15870c"><span class="section-number-2">4</span> Compute antenna performance sensitivity to realised length</h2>
 </div>
@@ -440,28 +394,6 @@ And polar plots of gain at various elevation angles
 <div class="outline-text-2" id="text-7">
 <div class="org-src-container">
 <pre class="src src-python" id="orgb3d8adc"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">main</span>():
-=======
-<div id="outline-container-org78e6bc1" class="outline-2">
-<h2 id="org78e6bc1"><span class="section-number-2">4</span> Compute antenna performance sensitivity to realised length</h2>
-</div>
-
-<div id="outline-container-org14b403d" class="outline-2">
-<h2 id="org14b403d"><span class="section-number-2">5</span> Compute antenna performance sensitivity (bandwith) to wire thickness</h2>
-</div>
-
-<div id="outline-container-org2fd7885" class="outline-2">
-<h2 id="org2fd7885"><span class="section-number-2">6</span> Compute a suitable bandpass impedance matching network</h2>
-<div class="outline-text-2" id="text-6">
-<div class="org-src-container">
-<pre class="src src-python" id="org4195f05"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">compute_bp_matching_network</span>(z0, zl):
-    <span style="color: #a020f0;">return</span> 0.0
-</pre>
-</div>
-
-
-<div class="org-src-container">
-<pre class="src src-python" id="orgb6eb3c0"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">main</span>():
->>>>>>> d5468985e86e960ab36760acf8b97e74c2e036e1
 
     <span style="color: #a0522d;">parser</span> = ArgumentParser(description=<span style="color: #8b2252;">"Optimise monopole and compute matching network."</span>)
     <span style="color: #a0522d;">args</span> = parser.parse_args()
@@ -478,7 +410,14 @@ And polar plots of gain at various elevation angles
 
     <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"z: {0}"</span>.<span style="color: #483d8b;">format</span>(z))
 
-    <span style="color: #a0522d;">context</span> = geometry(FREQ, base, length, R_W)
+    <span style="color: #a0522d;">context</span>, <span style="color: #a0522d;">solid_geom</span> = geometry(FREQ, base, length, R_W)
+
+    <span style="color: #a0522d;">out_dir</span> = sys.argv[1] <span style="color: #a020f0;">if</span> <span style="color: #483d8b;">len</span>(sys.argv) &gt; 1 <span style="color: #a020f0;">else</span> os.curdir
+    <span style="color: #a0522d;">file_out</span> = os.path.join(out_dir, <span style="color: #8b2252;">'monopoleradials.scad'</span>)
+    scad_render_to_file(solid_geom, file_header=<span style="color: #8b2252;">'$fn = %s;'</span> % SEGMENTS,
+                        include_orig_code=<span style="color: #008b8b;">True</span>)
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"%(__file__)s: SCAD file written to: \n%(file_out)s"</span> % <span style="color: #483d8b;">vars</span>())
+
     <span style="color: #b22222;">#</span><span style="color: #b22222;">context = geometry(FREQ, 2.0, 0.63, 0.02)</span>
     plot_radiation_pattern(context)
     <span style="color: #b22222;">#</span><span style="color: #b22222;">compute_bp_matching_network(Z0, zl)</span>
@@ -488,26 +427,14 @@ And polar plots of gain at various elevation angles
 </div>
 
 <div class="org-src-container">
-<<<<<<< HEAD
 <pre class="src src-shell" id="orgfcf1444">python monopoleradials.py 2&gt;&amp;1
-=======
-<pre class="src src-shell" id="org03ade83">python monopoleradials.py 2&gt;&amp;1
->>>>>>> d5468985e86e960ab36760acf8b97e74c2e036e1
 true
 </pre>
 </div>
 
 <pre class="example">
-Add wire 0.63 2.63 0.02 
-gains_db.shape = (720, 180)
-thetas.shape = (720,)
-phis.shape = (180,)
-THETA.shape = (180, 720)
-PHI.shape = (180, 720)
-<<<<<<< HEAD
+python: can't open file 'monopoleradials.py': [Errno 2] No such file or directory
 
-=======
->>>>>>> d5468985e86e960ab36760acf8b97e74c2e036e1
 </pre>
 </div>
 </div>
