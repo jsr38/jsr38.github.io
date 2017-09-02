@@ -8,8 +8,13 @@ tags : [technical, sdr, rtl-sdr]
 {% include JB/setup %}
 </p>
 
+<<<<<<< HEAD
 <div id="outline-container-orgddfc2a7" class="outline-2">
 <h2 id="orgddfc2a7"><span class="section-number-2">1</span> Get the source and build the software</h2>
+=======
+<div id="outline-container-orgd420dcf" class="outline-2">
+<h2 id="orgd420dcf"><span class="section-number-2">1</span> Get the source and build the software</h2>
+>>>>>>> d5468985e86e960ab36760acf8b97e74c2e036e1
 <div class="outline-text-2" id="text-1">
 <p>
 There seem to be heaps of forks of rtl-sdr on github but judging from comments in the issue trackers, and the official osmocom homepage, <a href="https://osmocom.org/projects/sdr">https://osmocom.org/projects/sdr</a> the official repository is the one hosted by osmocom here  as noted on their wiki <a href="https://osmocom.org/projects/sdr/wiki/Rtl-sdr">https://osmocom.org/projects/sdr/wiki/Rtl-sdr</a>  there is an official github mirror which is <a href="https://github.com/steve-m/librtlsdr">https://github.com/steve-m/librtlsdr</a> .
@@ -20,10 +25,13 @@ git clone git://git.osmocom.org/rtl-sdr.git
 </pre>
 
 <p>
+<<<<<<< HEAD
 On MacOS X the homebrew packaged rtl-sdr seems to work as-is, however, the Ubuntu package <code class="src src-shell">librtlsdr0</code> 
 </p>
 
 <p>
+=======
+>>>>>>> d5468985e86e960ab36760acf8b97e74c2e036e1
 There is an implementation of individual stage gain setting specifically for R820T2 tuners which does not appear to have been merged into the official rtl-sdr codebase which lives here <a href="https://github.com/gat3way/r820tweak">https://github.com/gat3way/r820tweak</a> .  It uses LD_PRELOAD to load a modified librtlsdr.so (on Linux systems) and provides a python GUI to manipulate the register values at runtime.  I haven't experimented with this yet.
 </p>
 
@@ -37,8 +45,13 @@ git clone git@github.com:EarToEarOak/RTLSDR-Scanner.git
 </div>
 </div>
 
+<<<<<<< HEAD
 <div id="outline-container-org91a32b3" class="outline-2">
 <h2 id="org91a32b3"><span class="section-number-2">2</span> Configure for an initial scan</h2>
+=======
+<div id="outline-container-org3bfbdee" class="outline-2">
+<h2 id="org3bfbdee"><span class="section-number-2">2</span> Configure for an initial scan</h2>
+>>>>>>> d5468985e86e960ab36760acf8b97e74c2e036e1
 <div class="outline-text-2" id="text-2">
 <p>
 The scanner software starts with default settings that produce a single sweep of the FM broadcast band for my current location.
@@ -57,6 +70,7 @@ The scanner software starts with default settings that produce a single sweep of
 </div>
 </div>
 
+<<<<<<< HEAD
 <div id="outline-container-org48fee6c" class="outline-2">
 <h2 id="org48fee6c"><span class="section-number-2">3</span> The hardware configuration</h2>
 </div>
@@ -165,10 +179,19 @@ Take a look here: <a href="https://github.com/EarToEarOak/RTLSDR-Scanner/blob/ma
 
 <div id="outline-container-org2937c64" class="outline-2">
 <h2 id="org2937c64"><span class="section-number-2">9</span> Intermodulation products and gain</h2>
+=======
+<div id="outline-container-org25c6b96" class="outline-2">
+<h2 id="org25c6b96"><span class="section-number-2">3</span> Intermodulation products and gain</h2>
+>>>>>>> d5468985e86e960ab36760acf8b97e74c2e036e1
 </div>
 
 
 
+<<<<<<< HEAD
 <div id="outline-container-org087c03a" class="outline-2">
 <h2 id="org087c03a"><span class="section-number-2">10</span> Automating the scan</h2>
+=======
+<div id="outline-container-org6a9a602" class="outline-2">
+<h2 id="org6a9a602"><span class="section-number-2">4</span> Automating the scan</h2>
+>>>>>>> d5468985e86e960ab36760acf8b97e74c2e036e1
 </div>
