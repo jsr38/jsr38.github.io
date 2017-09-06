@@ -96,6 +96,11 @@ The following are simulation parameters, fundamental constants and derived param
 
 <span style="color: #8b2252;">"""</span>
 
+<span style="color: #a0522d;">N_CONNECTOR_HOLE_PITCH</span> = 0.01824
+<span style="color: #8b2252;">"""float: hole pitch (m) of panel mount N connector mount holes</span>
+
+<span style="color: #8b2252;">"""</span>
+
 <span style="color: #a0522d;">CONDUCTIVITY</span> = 1.45e6
 <span style="color: #8b2252;">"""float: sigma (S), electrical conductivity of stainless steel.</span>
 
@@ -105,7 +110,7 @@ The following are simulation parameters, fundamental constants and derived param
 
 <span style="color: #8b2252;">"""</span>
 
-<span style="color: #a0522d;">R_W</span> = 0.002
+<span style="color: #a0522d;">R_W</span> = 0.0005
 <span style="color: #8b2252;">"""float: r_w, (m), initial wire radius."""</span>
 
 <span style="color: #a0522d;">WAVELENGTH</span> = C / FREQ
@@ -113,6 +118,9 @@ The following are simulation parameters, fundamental constants and derived param
 
 <span style="color: #a0522d;">Z0</span> = 50
 <span style="color: #8b2252;">"""float: Z_0 (Ohms), feedline characteristic impedance."""</span>
+
+<span style="color: #a0522d;">N_SEGMENTS</span> = 30
+<span style="color: #8b2252;">"""int: SEGMENTS , number of segments used in MoM geometry."""</span>
 
 <span style="color: #a0522d;">SEGMENTS</span> = 48
 <span style="color: #8b2252;">"""int: SEGMENTS , number of segments used in openscad rendering."""</span>
@@ -124,12 +132,30 @@ The following are simulation parameters, fundamental constants and derived param
 </div>
 
 <p>
+Some global variables used to track the optimisation path
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python" id="orge5d0857"><span style="color: #a0522d;">z_path</span> = np.ndarray(shape=(1,0), dtype=<span style="color: #483d8b;">complex</span>)
+<span style="color: #a0522d;">gamma_path</span> = np.ndarray(shape=(1,0), dtype=<span style="color: #483d8b;">float</span>)
+</pre>
+</div>
+
+<p>
 This function simply computes \(\Gamma\), the reflection coefficient for a particular antenna scenario given characteristic impedance of the transmission line.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-python" id="org886ffa0"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">reflection_coefficient</span>(z, z0):
+<pre class="src src-python" id="org0fdd0b1"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">reflection_coefficient</span>(z, z0):
     <span style="color: #a020f0;">return</span> np.<span style="color: #483d8b;">abs</span>((z - z0) / (z + z0))
+
+<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">vswr</span>(z, z0):
+    <span style="color: #a0522d;">Gamma</span> = reflection_coefficient(z, z0)
+    <span style="color: #a020f0;">return</span> <span style="color: #483d8b;">float</span>((1 + Gamma) / (1 - Gamma))
+
+<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">mismatch</span>(z, z0):
+    <span style="color: #a0522d;">Gamma</span> = reflection_coefficient(z, z0)
+    <span style="color: #a020f0;">return</span> 1 - Gamma**2
 </pre>
 </div>
 
@@ -139,59 +165,155 @@ We construct the antenna geometry, in this case a single wire oriented in the po
 
 <div class="org-src-container">
 <pre class="src src-python" id="org0259f2f"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">geometry</span>(base, length, r_w, radial_len,
-             radial_offset, n_radials, theta_radial):
+             radial_offset, n_radials, theta_radial,
+             n_segments,
+             construct_nec_context=<span style="color: #008b8b;">False</span>,
+             construct_solid_geom=<span style="color: #008b8b;">False</span>):
+    <span style="color: #a020f0;">if</span> DEBUG_LOG:
+        <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"geometry called with {} {} {} {} {} {} {}"</span>
+              .<span style="color: #483d8b;">format</span>(base, length, r_w, radial_len,
+                      radial_offset, n_radials, theta_radial))
 
-    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"geometry called with {} {} {} {} {} {} {}"</span>
-          .<span style="color: #483d8b;">format</span>(base, length, r_w, radial_len,
-                  radial_offset, n_radials, theta_radial))
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">in case we are constructing neither</span>
+    <span style="color: #a0522d;">context</span> = <span style="color: #008b8b;">None</span>
+    <span style="color: #a0522d;">solid_geom</span> = <span style="color: #008b8b;">None</span>
+    <span style="color: #a0522d;">curr_tag</span> = 1
 
-    <span style="color: #b22222;">#</span><span style="color: #b22222;">creation of a nec context</span>
-    <span style="color: #a0522d;">context</span> = nec_context()
+    <span style="color: #a020f0;">if</span> construct_nec_context:
+        <span style="color: #b22222;">#</span><span style="color: #b22222;">creation of a nec context</span>
+        <span style="color: #a0522d;">context</span> = nec_context()
 
-    context.set_extended_thin_wire_kernel(<span style="color: #008b8b;">True</span>)
-    <span style="color: #b22222;">#</span><span style="color: #b22222;">get the associated geometry</span>
-    <span style="color: #a0522d;">geo</span> = context.get_geometry()
+        context.set_extended_thin_wire_kernel(<span style="color: #008b8b;">True</span>)
+        <span style="color: #b22222;">#</span><span style="color: #b22222;">get the associated geometry</span>
+        <span style="color: #a0522d;">geo</span> = context.get_geometry()
 
     <span style="color: #b22222;">#</span><span style="color: #b22222;">ensure that we meet validity criterion for</span>
     <span style="color: #b22222;"># </span><span style="color: #b22222;">thin wire aproximation (non-extended thin wire kernel)</span>
-    <span style="color: #a020f0;">assert</span> (0.636 / 36 / r_w) &gt; 8
+    <span style="color: #a020f0;">assert</span> (0.636 / n_segments / r_w) &gt; 8
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">TODO: Test the thin wire approximation for the</span>
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">interconnect wires</span>
+    <span style="color: #a0522d;">n_interconnect_segments</span> = 1
+
     <span style="color: #b22222;">#</span><span style="color: #b22222;">add driven element</span>
     <span style="color: #a020f0;">if</span> DEBUG_LOG:
         <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"Add wire {} {} {} "</span>.<span style="color: #483d8b;">format</span>(base, base + length,
                                           r_w))
 
-    geo.wire(1, 36, 0.0, 0.0, base, 0.0, 0.0, base + length, r_w, 1.0, 1.0)
-    <span style="color: #a0522d;">solid_geom</span> = sp.translate([0,0,length/2 + base])(
-        sp.cylinder(r=r_w, h=length, center=<span style="color: #008b8b;">True</span>))
+    <span style="color: #a020f0;">if</span> construct_nec_context:
+        geo.wire(curr_tag, n_segments,
+                 0.0, 0.0, base,
+                 0.0, 0.0, base + length,
+                 r_w, 1.0, 1.0)
+        <span style="color: #a0522d;">curr_tag</span> += 1
+    <span style="color: #a020f0;">if</span> construct_solid_geom:
+        <span style="color: #a0522d;">solid_geom</span> = sp.translate([0,0,length/2 + base])(
+            sp.cylinder(r=r_w, h=length, center=<span style="color: #008b8b;">True</span>))
 
     <span style="color: #b22222;">#</span><span style="color: #b22222;">add grounded radials</span>
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">radials are spaced equivalent to holes on a square </span>
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">with 18.24mm pitch which represents a panel mount N connector</span>
     <span style="color: #a0522d;">delta_theta</span> = 2 * np.pi / n_radials
     <span style="color: #a0522d;">theta_radial_rad</span> = theta_radial * np.pi / 180.0
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">equivalent radius for connector mount holes (to handle</span>
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">arbitrary number of radials)</span>
+    <span style="color: #a0522d;">connector_radius</span> = N_CONNECTOR_HOLE_PITCH / np.sqrt(2)
+
     <span style="color: #a020f0;">if</span> DEBUG_LOG:
-          <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"delta_theta = {} theta_radial_rad = {}"</span>
-                .<span style="color: #483d8b;">format</span>(delta_theta, theta_radial_rad))
+        <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"delta_theta = {} theta_radial_rad = {} connector_radius = {}"</span>
+              .<span style="color: #483d8b;">format</span>(delta_theta, theta_radial_rad, connector_radius))
+
     <span style="color: #a020f0;">for</span> n <span style="color: #a020f0;">in</span> <span style="color: #483d8b;">range</span>(n_radials):
         <span style="color: #b22222;">#</span><span style="color: #b22222;">spherical to cartesian transformation</span>
-        <span style="color: #b22222;"># </span><span style="color: #b22222;">with theta_radial taken as </span>
-        <span style="color: #a0522d;">x</span> = radial_len * np.cos(delta_theta * n) * np.sin(theta_radial_rad)
-        <span style="color: #a0522d;">y</span> = radial_len * np.sin(delta_theta * n) * np.sin(theta_radial_rad)
+        <span style="color: #b22222;"># </span><span style="color: #b22222;">with theta_radial taken as</span>
+        <span style="color: #a0522d;">x_connector_offset</span> = connector_radius * np.cos(delta_theta * n)
+        <span style="color: #a0522d;">y_connector_offset</span> = connector_radius * np.sin(delta_theta * n)
+        <span style="color: #a0522d;">x</span> = radial_len * np.cos(delta_theta * n) * np.sin(theta_radial_rad) \
+            + x_connector_offset
+        <span style="color: #a0522d;">y</span> = radial_len * np.sin(delta_theta * n) * np.sin(theta_radial_rad) \
+            + y_connector_offset
         <span style="color: #a0522d;">z</span> = radial_len * np.cos(theta_radial_rad)
+
         <span style="color: #a020f0;">if</span> DEBUG_LOG:
-              <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"Add wire {} {} {} -&gt; {} {} {} "</span>
-                    .<span style="color: #483d8b;">format</span>(0.0, 0.0, base - radial_offset,
-                            x, y, base - radial_offset - z))
+            <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"Add wire {} {} {} -&gt; {} {} {} "</span>
+                  .<span style="color: #483d8b;">format</span>(x_connector_offset, y_connector_offset,
+                          base - radial_offset,
+                          x, y, base - radial_offset - z))
 
-        geo.wire(1 + (n + 1), 36,
-                 0.0, 0.0, base - radial_offset,
-                 x, y, base - radial_offset - z,
-                 r_w, 1.0, 1.0)
+        <span style="color: #a020f0;">if</span> construct_nec_context:
+            geo.wire(curr_tag, n_segments,
+                     x_connector_offset, y_connector_offset,
+                     base - radial_offset,
+                     x, y, base - radial_offset - z,
+                     r_w, 1.0, 1.0)
+            <span style="color: #a0522d;">curr_tag</span> += 1
+            <span style="color: #a020f0;">if</span> n &gt; 0:
+                geo.wire(curr_tag, n_interconnect_segments,
+                         x_connector_offset_prev, y_connector_offset_prev,
+                         base - radial_offset,
+                         x_connector_offset, y_connector_offset,
+                         base - radial_offset,
+                         r_w, 1.0, 1.0)
+                <span style="color: #a0522d;">curr_tag</span> += 1
+            <span style="color: #b22222;"># </span><span style="color: #b22222;">back to the initial radial from the final radial</span>
+            <span style="color: #a020f0;">if</span> n == n_radials - 1:
+                geo.wire(curr_tag, n_interconnect_segments,
+                         x_connector_offset, y_connector_offset,
+                         base - radial_offset,
+                         connector_radius, 0,
+                         base - radial_offset,
+                         r_w, 1.0, 1.0)
+                <span style="color: #a0522d;">curr_tag</span> += 1
 
-        <span style="color: #a0522d;">delta_theta_deg</span> = delta_theta * 180 / np.pi
-        <span style="color: #a0522d;">solid_geom</span> += sp.rotate([0,theta_radial + 90,delta_theta_deg * n])(
-            sp.translate([0,0,length/2 + base])(
-                sp.cylinder(r=r_w, h=radial_len, center=<span style="color: #008b8b;">True</span>)))
 
-    context.geometry_complete(0)
+        <span style="color: #a020f0;">if</span> construct_solid_geom:
+
+            <span style="color: #a0522d;">delta_theta_deg</span> = delta_theta * 180 / np.pi
+            <span style="color: #a0522d;">solid_geom</span> += sp.translate([x_connector_offset,
+                                        y_connector_offset,
+                                        base - radial_offset])(
+                sp.rotate([0,theta_radial + 90,delta_theta_deg * n])(
+                    sp.translate([0,0,radial_len/2])(
+                        sp.cylinder(r=r_w, h=radial_len, center=<span style="color: #008b8b;">True</span>))))
+
+            <span style="color: #a020f0;">if</span> n &gt; 0:
+                <span style="color: #a0522d;">interconnect_len</span> = \
+                    np.sqrt((x_connector_offset_prev     \
+                             - x_connector_offset) ** 2  \
+                            + (y_connector_offset_prev   \
+                               - y_connector_offset) ** 2)
+                <span style="color: #a0522d;">delta_y</span> = y_connector_offset - y_connector_offset_prev
+                <span style="color: #a0522d;">delta_x</span> = x_connector_offset - x_connector_offset_prev
+                <span style="color: #a0522d;">tan_alpha</span> = delta_y / delta_x
+                <span style="color: #a0522d;">alpha</span> = np.arctan(tan_alpha)
+
+                <span style="color: #a020f0;">if</span> delta_x &gt; 0:
+                    <span style="color: #a0522d;">alpha</span> = alpha + np.pi
+
+                <span style="color: #a0522d;">solid_geom</span> += sp.translate([x_connector_offset,
+                                            y_connector_offset,
+                                            base - radial_offset])(
+                    sp.rotate([0,90,alpha * 180 / np.pi])(
+                        sp.translate([0,0,interconnect_len/2])(
+                            sp.cylinder(r=r_w, h=interconnect_len, center=<span style="color: #008b8b;">True</span>))))
+
+            <span style="color: #a020f0;">if</span> n == n_radials - 1:
+
+                <span style="color: #a0522d;">tan_alpha</span> = (0.0 - y_connector_offset) /                   \
+                            (connector_radius - x_connector_offset)
+                <span style="color: #a0522d;">alpha</span> = np.arctan(tan_alpha) + np.pi
+
+                <span style="color: #a0522d;">solid_geom</span> += sp.translate([connector_radius,
+                                            0,
+                                            base - radial_offset])(
+                    sp.rotate([0,90,alpha * 180 / np.pi])(
+                        sp.translate([0,0,interconnect_len/2])(
+                            sp.cylinder(r=r_w, h=interconnect_len, center=<span style="color: #008b8b;">True</span>))))
+
+        <span style="color: #a0522d;">x_connector_offset_prev</span> = x_connector_offset
+        <span style="color: #a0522d;">y_connector_offset_prev</span> = y_connector_offset
+
+    <span style="color: #a020f0;">if</span> construct_nec_context:
+        context.geometry_complete(0)
 
     <span style="color: #a020f0;">return</span> context, solid_geom
 </pre>
@@ -217,11 +339,7 @@ We construct the antenna geometry, in this case a single wire oriented in the po
 </div>
 
 <div class="org-src-container">
-<pre class="src src-python" id="org97a158c"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">impedance</span>(frequency, base, length, r_w, radial_len,
-              radial_offset, n_radials, theta_radial):
-
-      <span style="color: #a0522d;">context</span>, <span style="color: #a0522d;">solid_geom</span> = geometry(base, length, r_w, radial_len,
-                                     radial_offset, n_radials, theta_radial)
+<pre class="src src-python" id="org97a158c"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">compute_impedance</span>(context, frequency):
 
       set_sim_params(context, frequency)
       <span style="color: #b22222;"># </span><span style="color: #b22222;">Group III cards</span>
@@ -239,16 +357,32 @@ We construct the antenna geometry, in this case a single wire oriented in the po
 <div class="org-src-container">
 <pre class="src src-python" id="orga6265f2"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">cost_function</span>(x):
 
-    <span style="color: #a0522d;">radial_len</span> = np.exp(x[2])
-    <span style="color: #a0522d;">radial_offset</span> = 0.1
+    <span style="color: #a0522d;">radial_len</span> = x[2]
+    <span style="color: #a0522d;">radial_offset</span> = 0.0
     <span style="color: #a0522d;">n_radials</span> = 4
-    <span style="color: #a0522d;">theta_radial</span> = np.exp(x[3])
-    <span style="color: #a0522d;">length</span> = np.exp(x[0])   <span style="color: #b22222;"># </span><span style="color: #b22222;">length &gt;= 0</span>
-    <span style="color: #a0522d;">base</span> = np.exp(x[1])   <span style="color: #b22222;"># </span><span style="color: #b22222;">base &gt;= 0</span>
-    <span style="color: #a0522d;">z</span> = impedance(FREQ, base, length, R_W, radial_len,
-                  radial_offset, n_radials, theta_radial)
+    <span style="color: #a0522d;">theta_radial</span> = 45.0
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">theta_radial = np.exp(x[3])</span>
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">if theta_radial &gt; 80.0:</span>
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">return float('inf')</span>
+    <span style="color: #a0522d;">length</span> = x[0]   <span style="color: #b22222;"># </span><span style="color: #b22222;">length &gt;= 0</span>
+    <span style="color: #a0522d;">base</span> = x[1]     <span style="color: #b22222;"># </span><span style="color: #b22222;">base &gt;= 0</span>
+    <span style="color: #a020f0;">if</span> base &lt; 0 <span style="color: #a020f0;">or</span> length &lt;= 0.1 <span style="color: #a020f0;">or</span> radial_len &lt;= 0.1:
+        <span style="color: #a020f0;">return</span> <span style="color: #483d8b;">float</span>(<span style="color: #8b2252;">'inf'</span>)
 
-    <span style="color: #a020f0;">return</span> reflection_coefficient(z, Z0)
+    <span style="color: #a0522d;">context</span>, <span style="color: #a0522d;">solid_geom</span> = geometry(base, length, R_W, radial_len,
+                                   radial_offset, n_radials, theta_radial,
+                                   N_SEGMENTS,
+                                   construct_nec_context=<span style="color: #008b8b;">True</span>,
+                                   construct_solid_geom=<span style="color: #008b8b;">False</span>)
+
+    <span style="color: #a0522d;">z</span> = compute_impedance(context, FREQ)
+    <span style="color: #a0522d;">gamma</span> = reflection_coefficient(z, Z0)
+
+    <span style="color: #a020f0;">global</span> z_path, gamma_path
+    <span style="color: #a0522d;">z_path</span> = np.append(z_path, z)
+    <span style="color: #a0522d;">gamma_path</span> = np.append(gamma_path, gamma)
+
+    <span style="color: #a020f0;">return</span> vswr(z, Z0)
 </pre>
 </div>
 
@@ -267,27 +401,37 @@ The main optimisation function below minimises the reflection coefficient with r
               (np.log(0.4), np.log(0.7)),
               (np.log(15.0), np.log(85.0))]
 
-    <span style="color: #a0522d;">initial_radial_len</span> = np.log(0.636)
-    <span style="color: #a0522d;">initial_theta_radial</span> = np.log(45.0)
-    <span style="color: #a0522d;">initial_length</span> = np.log(0.636)
-    <span style="color: #a0522d;">initial_base</span> = np.log(0.1)
+    <span style="color: #a0522d;">initial_radial_len</span> = 0.6
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">initial_theta_radial = np.log(22.0)</span>
+    <span style="color: #a0522d;">initial_length</span> = 0.6
+    <span style="color: #a0522d;">initial_base</span> = 0.01
 
     <span style="color: #a0522d;">initial_geom</span> = np.array([initial_length, initial_base, \
-                             initial_radial_len, initial_theta_radial])
+                             initial_radial_len])<span style="color: #b22222;">#</span><span style="color: #b22222;">, initial_theta_radial])</span>
+
     <span style="color: #b22222;"># </span><span style="color: #b22222;">Carry out the minimization</span>
     <span style="color: #b22222;">#</span><span style="color: #b22222;">result = scipy.optimize.differential_evolution(cost_function, bounds)</span>
     <span style="color: #a0522d;">result</span> = scipy.optimize.minimize(cost_function, initial_geom, \
                                      method=<span style="color: #8b2252;">'Nelder-Mead'</span>)
 
-    <span style="color: #a0522d;">log_length</span> = result.x[0]
-    <span style="color: #a0522d;">log_base</span> = result.x[1]
-    <span style="color: #a0522d;">length</span> = np.exp(log_length)
-    <span style="color: #a0522d;">base</span> = np.exp(log_base)
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'z_path min={} max={}'</span>.<span style="color: #483d8b;">format</span>(np.amin(z_path),
+                                        np.amax(z_path)))
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'gamma_path min={} max={}'</span>.<span style="color: #483d8b;">format</span>(np.amin(gamma_path),
+                                            np.amax(gamma_path)))
 
-    <span style="color: #a0522d;">radial_len</span> = np.exp(result.x[2])
-    <span style="color: #a0522d;">radial_offset</span> = 0.05
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">log_length = result.x[0]</span>
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">log_base = result.x[1]</span>
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">length = np.exp(log_length)</span>
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">base = np.exp(log_base)</span>
+    <span style="color: #a0522d;">length</span> = result.x[0]
+    <span style="color: #a0522d;">base</span> = result.x[1]
+
+    <span style="color: #a0522d;">radial_len</span> = result.x[2]
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">radial_len = np.exp(result.x[2])</span>
+    <span style="color: #a0522d;">radial_offset</span> = 0.0
     <span style="color: #a0522d;">n_radials</span> = 4
-    <span style="color: #a0522d;">theta_radial</span> = np.exp(result.x[3])
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">theta_radial = np.exp(result.x[3])</span>
+    <span style="color: #a0522d;">theta_radial</span> = 45.0
 
     <span style="color: #a020f0;">return</span> base, length, R_W, radial_len, \
         radial_offset, n_radials, theta_radial
@@ -455,28 +599,45 @@ And polar plots of gain at various elevation angles
     <span style="color: #a0522d;">parser</span> = ArgumentParser(description=<span style="color: #8b2252;">"Optimise monopole and compute matching network."</span>)
     <span style="color: #a0522d;">args</span> = parser.parse_args()
 
-    base, length, R_W, radial_len, \
-        <span style="color: #a0522d;">radial_offset</span>, <span style="color: #a0522d;">n_radials</span>, <span style="color: #a0522d;">theta_radial</span> = optimise_antenna()
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">base, length, r_w, radial_len, \</span>
+    <span style="color: #b22222;">#    </span><span style="color: #b22222;">radial_offset, n_radials, theta_radial = optimise_antenna()</span>
 
-    <span style="color: #a0522d;">z</span> = impedance(FREQ, base, length, R_W, radial_len,
-                  radial_offset, n_radials, theta_radial)
+    <span style="color: #a0522d;">base</span> = 0.007
+    <span style="color: #a0522d;">length</span> = 0.63
+    <span style="color: #a0522d;">radial_len</span> = 0.6
+    <span style="color: #a0522d;">radial_offset</span> = 0.0
+    <span style="color: #a0522d;">n_radials</span> = 3
+    <span style="color: #a0522d;">theta_radial</span> = 45.0
+    <span style="color: #a0522d;">r_w</span> = R_W
 
-    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"Impedance at base={0:.2f}, length={1:.2f}"</span>
-          <span style="color: #8b2252;">" : ({2:6.1f},{3:+6.1f}i) Ohms"</span>
-          .<span style="color: #483d8b;">format</span>(base, length, z.real, z.imag))
-    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"Reflection coefficient Gamma={0:0.2f}"</span>
-          .<span style="color: #483d8b;">format</span>(reflection_coefficient(z, Z0)))
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"\nOptimisation result\n"</span>)
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"final geometry {} {} {} {} {} {} {}"</span>
+          .<span style="color: #483d8b;">format</span>(base, length, r_w, radial_len,
+                  radial_offset, n_radials, theta_radial))
 
-    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"z: {0}"</span>.<span style="color: #483d8b;">format</span>(z))
-
-    <span style="color: #a0522d;">context</span>, <span style="color: #a0522d;">solid_geom</span> = geometry(base, length, R_W, radial_len,
-                                   radial_offset, n_radials, theta_radial)
+    <span style="color: #a0522d;">context</span>, <span style="color: #a0522d;">solid_geom</span> = geometry(base, length, r_w, radial_len,
+                                   radial_offset, n_radials, theta_radial,
+                                   N_SEGMENTS,
+                                   construct_nec_context=<span style="color: #008b8b;">True</span>,
+                                   construct_solid_geom=<span style="color: #008b8b;">True</span>)
 
     <span style="color: #a0522d;">out_dir</span> = sys.argv[1] <span style="color: #a020f0;">if</span> <span style="color: #483d8b;">len</span>(sys.argv) &gt; 1 <span style="color: #a020f0;">else</span> os.curdir
     <span style="color: #a0522d;">file_out</span> = os.path.join(out_dir, <span style="color: #8b2252;">'monopoleradials.scad'</span>)
     sp.scad_render_to_file(solid_geom, file_header=<span style="color: #8b2252;">'$fn = {};'</span>.<span style="color: #483d8b;">format</span>(SEGMENTS),
                            include_orig_code=<span style="color: #008b8b;">True</span>)
     <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"{}: SCAD file written to: \n{}"</span>.<span style="color: #483d8b;">format</span>(__file__, file_out))
+
+    <span style="color: #a0522d;">z</span> = compute_impedance(context, FREQ)
+
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"Impedance at base={0:.2f}, length={1:.2f}"</span>
+          <span style="color: #8b2252;">" : ({2:6.1f},{3:+6.1f}i) Ohms"</span>
+          .<span style="color: #483d8b;">format</span>(base, length, z.real, z.imag))
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"Reflection coefficient Gamma={0:0.2f}"</span>
+          .<span style="color: #483d8b;">format</span>(reflection_coefficient(z, Z0)))
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"VSWR @50 ohm ={0:0.2f}"</span>
+          .<span style="color: #483d8b;">format</span>(vswr(z, Z0)))
+
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"z: {0}"</span>.<span style="color: #483d8b;">format</span>(z))
 
     set_sim_params(context, FREQ)      
     plot_radiation_pattern(context)
