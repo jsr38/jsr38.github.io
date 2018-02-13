@@ -1,0 +1,63 @@
+---
+layout: post
+category : technical
+tagline: "Hints and tips for creating a Jenkins Docker image for building Android apps"
+tags : [technical, android, gradle, java, jenkins, docker]
+---
+<p>
+{% include JB/setup %}
+</p>
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1"><span class="section-number-2">1</span> Generate a packages.txt from a running Jenkins install</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+Using <a href="https://YOUR_JENKINS_URL/script">https://YOUR_JENKINS_URL/script</a> , execute the following
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-groovy" id="generate-packages.txt-groovy">Jenkins.instance.pluginManager.plugins.each{
+  plugin -&gt; 
+    println ("${plugin.getShortName()}:${plugin.getVersion()}")
+}
+</pre>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2"><span class="section-number-2">2</span> Build my derived Jenkins Docker image</h2>
+<div class="outline-text-2" id="text-2">
+<div class="org-src-container">
+
+<pre class="src src-sh">docker build -t igrow-systems/docker-jenkins-android .
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3"><span class="section-number-2">3</span> Run Docker image</h2>
+<div class="outline-text-2" id="text-3">
+<div class="org-src-container">
+
+<pre class="src src-sh">docker run --privileged --name dpr_jenkins <span style="color: #8b2252;">\</span>
+-p 8080:8080 -p 50000:50000 <span style="color: #8b2252;">\</span>
+-e <span style="color: #8b2252;">"ANDROID_BUILD_TOOLS_FILTER=27.0.3"</span> <span style="color: #8b2252;">\</span>
+-e <span style="color: #8b2252;">"ANDROID_SDK=r26.0.2"</span> <span style="color: #8b2252;">\</span>
+-v /home/dpr/Android/Sdk:/opt/android/sdk <span style="color: #8b2252;">\</span>
+-v /home/dpr/Android/Ndk:/opt/android/ndk <span style="color: #8b2252;">\</span>
+-v /home/dpr/jenkins_home:/var/jenkins_home <span style="color: #8b2252;">\</span>
+-v /home/dpr/.android:/var/jenkins_home/.android <span style="color: #8b2252;">\</span>
+--device /dev/kvm
+igrow-systems/docker-jenkins-android
+</pre>
+</div>
+
+<p>
+Needs the <code>--privileged</code> and <code>--device /dev/kvm</code> in order that <code>/dev/kvm</code> may be seen by the Jenkins user.  Also, steps must have been taken to ensure that <code>/dev/kvm</code> is owned by group <code>kvm</code> and that the Docker container was built with a group <code>kvm</code> having group id equal to that of the host <code>kvm</code> group id or some equivalent arrangement.
+</p>
+</div>
+</div>
