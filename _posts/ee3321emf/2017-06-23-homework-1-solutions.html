@@ -15,8 +15,8 @@ These are my solutions to the problems from <a href="http://emlab.utep.edu/ee332
 <a href="{{ site.url }}/assets/ee3321emf/Homework 1 -- Vectors.pdf">Homework 1</a>
 
 
-<div id="outline-container-orge230095" class="outline-2">
-<h2 id="orge230095"><span class="section-number-2">1</span> </h2>
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1"><span class="section-number-2">1</span> </h2>
 <div class="outline-text-2" id="text-1">
 \begin{equation}
 \mathbf{A} = \frac{1}{\sqrt{\left(2 - 1 \right )^2
@@ -36,8 +36,8 @@ These are my solutions to the problems from <a href="http://emlab.utep.edu/ee332
 </div>
 </div>
 
-<div id="outline-container-orgfdb22c8" class="outline-2">
-<h2 id="orgfdb22c8"><span class="section-number-2">2</span> </h2>
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2"><span class="section-number-2">2</span> </h2>
 <div class="outline-text-2" id="text-2">
 <p>
 \(\mathbf{A} = 2\mathbf{i} - 2\mathbf{j} + \mathbf{k}\) and \(\mathbf{B} = 2\mathbf{i} - \mathbf{j} + 3\mathbf{k}\) and \(\mathbf{C} = 4\mathbf{i} + 2\mathbf{j} - 2 \mathbf{k}\).
@@ -52,16 +52,17 @@ These are my solutions to the problems from <a href="http://emlab.utep.edu/ee332
 \end{equation}
 
 <p>
-\(\mathbf{C}\) is not perpendicular to both \(\mathbf{A}\) and \(\mathbf{B}\)!
+\(\mathbf{C}\) is not perpendicular to both \(\mathbf{A}\) and $\mathbf{B}$!
 </p>
 </div>
 </div>
 
 
-<div id="outline-container-org18c3791" class="outline-2">
-<h2 id="org18c3791"><span class="section-number-2">3</span> </h2>
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3"><span class="section-number-2">3</span> </h2>
 <div class="outline-text-2" id="text-3">
 <div class="org-src-container">
+
 <pre class="src src-python"><span style="color: #a020f0;">import</span> matplotlib.pyplot <span style="color: #a020f0;">as</span> plt
 <span style="color: #a020f0;">import</span> numpy <span style="color: #a020f0;">as</span> np
 
@@ -94,11 +95,12 @@ plt.savefig(<span style="color: #8b2252;">'../images/ee3321-hw1-p3.png'</span>)
 </div>
 
 <figure>
-  <img src="{{ site.url }}/assets/ee3321-hw1-p3.png" alt="Problem 3 visualisation">	
+  <img src="{{ site.url }}/assets/ee3321-hw1-p3.png" alt="Problem 3 visualisation">     
   <figcaption>Problem 3 visualisation</figcaption>
 </figure>
 
 <div class="org-src-container">
+
 <pre class="src src-python"><span style="color: #a020f0;">import</span> numpy <span style="color: #a020f0;">as</span> np
 <span style="color: #a020f0;">import</span> scipy.linalg <span style="color: #a020f0;">as</span> la
 
@@ -137,11 +139,11 @@ A_T &= \frac{\lVert \mathbf{P_{12}} \times \mathbf{P_{13}} \rVert}{2} = 36
 </div>
 </div>
 
-<div id="outline-container-orga39c6d2" class="outline-2">
-<h2 id="orga39c6d2"><span class="section-number-2">4</span> </h2>
+<div id="outline-container-sec-4" class="outline-2">
+<h2 id="sec-4"><span class="section-number-2">4</span> </h2>
 <div class="outline-text-2" id="text-4">
-</div><div id="outline-container-org1f2795d" class="outline-3">
-<h3 id="org1f2795d"><span class="section-number-3">4.1</span> </h3>
+</div><div id="outline-container-sec-4-1" class="outline-3">
+<h3 id="sec-4-1"><span class="section-number-3">4.1</span> </h3>
 <div class="outline-text-3" id="text-4-1">
 <p>
 For \(\mathbf{A}\) and \(\mathbf{B}\) to be parallel we must have that \(\mathbf{A} = \lambda \mathbf{B}\) 
@@ -160,6 +162,7 @@ Check \(B_x\) and \(B_z\)
 </p>
 
 <div class="org-src-container">
+
 <pre class="src src-python"><span style="color: #a020f0;">import</span> numpy <span style="color: #a020f0;">as</span> np
 <span style="color: #a020f0;">import</span> scipy.linalg <span style="color: #a020f0;">as</span> la
 
@@ -175,8 +178,8 @@ Check \(B_x\) and \(B_z\)
 </div>
 </div>
 
-<div id="outline-container-org0fc06aa" class="outline-3">
-<h3 id="org0fc06aa"><span class="section-number-3">4.2</span> </h3>
+<div id="outline-container-sec-4-2" class="outline-3">
+<h3 id="sec-4-2"><span class="section-number-3">4.2</span> </h3>
 <div class="outline-text-3" id="text-4-2">
 <p>
 For the two vectors to be perpendicular we have \(\cos{\theta} = 0\).  From the definition of the
@@ -193,11 +196,11 @@ dot product and applying this condition we have
 </div>
 </div>
 
-<div id="outline-container-org05ed02c" class="outline-2">
-<h2 id="org05ed02c"><span class="section-number-2">5</span> </h2>
+<div id="outline-container-sec-5" class="outline-2">
+<h2 id="sec-5"><span class="section-number-2">5</span> </h2>
 <div class="outline-text-2" id="text-5">
-</div><div id="outline-container-org7b1dc44" class="outline-3">
-<h3 id="org7b1dc44"><span class="section-number-3">5.1</span> </h3>
+</div><div id="outline-container-sec-5-1" class="outline-3">
+<h3 id="sec-5-1"><span class="section-number-3">5.1</span> </h3>
 <div class="outline-text-3" id="text-5-1">
 \begin{align*}
 \lVert \mathbf{A} \rVert &= \sqrt{1^2 + 2^2 \left ( -3 \right )^2} = \sqrt{14} \\
@@ -207,8 +210,8 @@ dot product and applying this condition we have
 </div>
 </div>
 
-<div id="outline-container-org82a0277" class="outline-3">
-<h3 id="org82a0277"><span class="section-number-3">5.2</span> </h3>
+<div id="outline-container-sec-5-2" class="outline-3">
+<h3 id="sec-5-2"><span class="section-number-3">5.2</span> </h3>
 <div class="outline-text-3" id="text-5-2">
 \begin{align*}
 \textit{proj}_{\mathbf{A}}\mathbf{B} &= \frac{\mathbf{A} \cdot \mathbf{B}}{\lVert \mathbf{A} \rVert^2} \mathbf{A}  \\
@@ -222,8 +225,8 @@ and therefore the component of \(\mathbf{B}\) along \(\mathbf{A}\) is \(-\frac{3
 </div>
 </div>
 
-<div id="outline-container-org7fbe92e" class="outline-3">
-<h3 id="org7fbe92e"><span class="section-number-3">5.3</span> </h3>
+<div id="outline-container-sec-5-3" class="outline-3">
+<h3 id="sec-5-3"><span class="section-number-3">5.3</span> </h3>
 <div class="outline-text-3" id="text-5-3">
 \begin{align*}
 \cos{\theta_{\mathbf{A}\mathbf{C}}} &= \frac{\mathbf{A} \cdot \mathbf{C}}{\lVert \mathbf{A} \rVert \lVert \mathbf{C} \rVert} \\
@@ -238,6 +241,7 @@ Checking:
 </p>
 
 <div class="org-src-container">
+
 <pre class="src src-python"><span style="color: #a020f0;">import</span> numpy <span style="color: #a020f0;">as</span> np
 <span style="color: #a020f0;">import</span> scipy.linalg <span style="color: #a020f0;">as</span> la
 
@@ -253,8 +257,8 @@ Checking:
 </div>
 </div>
 
-<div id="outline-container-org3f1097e" class="outline-3">
-<h3 id="org3f1097e"><span class="section-number-3">5.4</span> </h3>
+<div id="outline-container-sec-5-4" class="outline-3">
+<h3 id="sec-5-4"><span class="section-number-3">5.4</span> </h3>
 <div class="outline-text-3" id="text-5-4">
 \begin{align*}
 \mathbf{A} \times \mathbf{C} &= \left \lvert \begin{bmatrix}
@@ -269,8 +273,8 @@ Checking:
 </div>
 </div>
 
-<div id="outline-container-orga7c970a" class="outline-3">
-<h3 id="orga7c970a"><span class="section-number-3">5.5</span> </h3>
+<div id="outline-container-sec-5-5" class="outline-3">
+<h3 id="sec-5-5"><span class="section-number-3">5.5</span> </h3>
 <div class="outline-text-3" id="text-5-5">
 \begin{align*}
 \mathbf{A} \cdot \left ( \mathbf{B} \times \mathbf{C} \right ) 
@@ -288,8 +292,8 @@ Checking:
 </div>
 </div>
 
-<div id="outline-container-org82761ed" class="outline-3">
-<h3 id="org82761ed"><span class="section-number-3">5.6</span> </h3>
+<div id="outline-container-sec-5-6" class="outline-3">
+<h3 id="sec-5-6"><span class="section-number-3">5.6</span> </h3>
 <div class="outline-text-3" id="text-5-6">
 <p>
 From the previous question, we have 
@@ -318,8 +322,8 @@ and therefore
 </div>
 </div>
 
-<div id="outline-container-orgf6f32b7" class="outline-3">
-<h3 id="orgf6f32b7"><span class="section-number-3">5.7</span> </h3>
+<div id="outline-container-sec-5-7" class="outline-3">
+<h3 id="sec-5-7"><span class="section-number-3">5.7</span> </h3>
 <div class="outline-text-3" id="text-5-7">
 \begin{align*}
 \mathbf{i} \times \mathbf{B}
@@ -336,8 +340,8 @@ and therefore
 </div>
 </div>
 
-<div id="outline-container-org50ae5fd" class="outline-3">
-<h3 id="org50ae5fd"><span class="section-number-3">5.8</span> </h3>
+<div id="outline-container-sec-5-8" class="outline-3">
+<h3 id="sec-5-8"><span class="section-number-3">5.8</span> </h3>
 <div class="outline-text-3" id="text-5-8">
 \begin{align*}
 \left ( \mathbf{A} \times \mathbf{j} \right ) \cdot \mathbf{k}

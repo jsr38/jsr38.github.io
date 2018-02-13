@@ -8,10 +8,11 @@ tags : [mom, necpp, emtheory]
 {% include JB/setup %}
 </p>
 
-<div id="outline-container-org1da2545" class="outline-2">
-<h2 id="org1da2545"><span class="section-number-2">1</span> Calculations</h2>
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1"><span class="section-number-2">1</span> Calculations</h2>
 <div class="outline-text-2" id="text-1">
 <div class="org-src-container">
+
 <pre class="src src-python"><span style="color: #a020f0;">return</span> <span style="color: #8b2252;">"{0:0.3f}"</span>.<span style="color: #483d8b;">format</span>(3e8 / 118e6 / 4)
 </pre>
 </div>
@@ -26,11 +27,12 @@ Approximate monopole length in metres.
 </div>
 
 
-<div id="outline-container-org70cb830" class="outline-2">
-<h2 id="org70cb830"><span class="section-number-2">2</span> Perfect ground \(\frac{\lambda}{4}\) monopole</h2>
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2"><span class="section-number-2">2</span> Perfect ground \(\frac{\lambda}{4}\) monopole</h2>
 <div class="outline-text-2" id="text-2">
 <div class="org-src-container">
-<pre class="src src-python" id="orgf83a4ca"><span style="color: #a020f0;">from</span> argparse <span style="color: #a020f0;">import</span> ArgumentParser
+
+<pre class="src src-python" id="airbandmonopole-main-imports"><span style="color: #a020f0;">from</span> argparse <span style="color: #a020f0;">import</span> ArgumentParser
 <span style="color: #a020f0;">from</span> PyNEC <span style="color: #a020f0;">import</span> *
 
 <span style="color: #a020f0;">import</span> logging
@@ -47,7 +49,8 @@ The following are simulation parameters, fundamental constants and derived param
 </p>
 
 <div class="org-src-container">
-<pre class="src src-python" id="orgb3c1117"><span style="color: #a0522d;">C</span> = 299792458
+
+<pre class="src src-python" id="airbandmonopole-constants"><span style="color: #a0522d;">C</span> = 299792458
 <span style="color: #8b2252;">"""float: c (ms^1), universal physical constant for speed of light in a vacuum.</span>
 
 <span style="color: #8b2252;">"""</span>
@@ -118,7 +121,8 @@ This function simply computes \(\Gamma\), the reflection coefficient for a parti
 </p>
 
 <div class="org-src-container">
-<pre class="src src-python" id="orga4be535"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">reflection_coefficient</span>(z, z0):
+
+<pre class="src src-python" id="airbandmonopole-reflection-coefficient"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">reflection_coefficient</span>(z, z0):
     <span style="color: #a020f0;">return</span> np.<span style="color: #483d8b;">abs</span>((z - z0) / (z + z0))
 </pre>
 </div>
@@ -128,7 +132,8 @@ We construct the antenna geometry, in this case a single wire oriented in the po
 </p>
 
 <div class="org-src-container">
-<pre class="src src-python" id="orgdc4d138"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">geometry</span>(frequency, base, length, r_w):
+
+<pre class="src src-python" id="airbandmonopole-geometry"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">geometry</span>(frequency, base, length, r_w):
 
     <span style="color: #b22222;">#</span><span style="color: #b22222;">creation of a nec context</span>
     <span style="color: #a0522d;">context</span>=nec_context()
@@ -162,7 +167,8 @@ We construct the antenna geometry, in this case a single wire oriented in the po
 
 
 <div class="org-src-container">
-<pre class="src src-python" id="org96a1799"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">impedance</span>(frequency, base, length, r_w):
+
+<pre class="src src-python" id="airbandmonopole-impedance"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">impedance</span>(frequency, base, length, r_w):
 
     <span style="color: #a0522d;">context</span> = geometry(frequency, base, length, r_w)
 
@@ -179,7 +185,8 @@ We construct the antenna geometry, in this case a single wire oriented in the po
 
 
 <div class="org-src-container">
-<pre class="src src-python" id="org40e7edc"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">cost_function</span>(x):
+
+<pre class="src src-python" id="airbandmonopole-cost-function"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">cost_function</span>(x):
 
     <span style="color: #a0522d;">length</span> = np.exp(x[0])   <span style="color: #b22222;"># </span><span style="color: #b22222;">length &gt;= 0</span>
     <span style="color: #a0522d;">base</span> = np.exp(x[1])   <span style="color: #b22222;"># </span><span style="color: #b22222;">base &gt;= 0</span>
@@ -195,7 +202,8 @@ The main optimisation function below minimises the reflection coefficient with r
 
 
 <div class="org-src-container">
-<pre class="src src-python" id="org8de2bf9"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">optimise_antenna</span>():
+
+<pre class="src src-python" id="airbandmonopole-optimise-antenna"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">optimise_antenna</span>():
 
     <span style="color: #b22222;"># </span><span style="color: #b22222;">Starting value </span>
     <span style="color: #a0522d;">freq</span> = FREQ
@@ -216,11 +224,12 @@ The main optimisation function below minimises the reflection coefficient with r
 </div>
 </div>
 
-<div id="outline-container-org1da8854" class="outline-2">
-<h2 id="org1da8854"><span class="section-number-2">3</span> Compute the radiation pattern for the optimised antenna and plot</h2>
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3"><span class="section-number-2">3</span> Compute the radiation pattern for the optimised antenna and plot</h2>
 <div class="outline-text-2" id="text-3">
 <div class="org-src-container">
-<pre class="src src-python" id="org5b94194"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">plot_radiation_pattern</span>(context):
+
+<pre class="src src-python" id="airbandmonopole-plot-radiation-pattern"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">plot_radiation_pattern</span>(context):
 
     <span style="color: #b22222;"># </span><span style="color: #b22222;">Group III cards</span>
     <span style="color: #b22222;">#</span><span style="color: #b22222;">add a "rp" card to specify radiation pattern sampling parameters </span>
@@ -310,15 +319,15 @@ The main optimisation function below minimises the reflection coefficient with r
 </div>
 
 <figure>
-  <img src="{{ site.url }}/assets/lambda_on_4_monopole_3d_gain_plot.png" alt="3d radiation pattern plot">	
+  <img src="{{ site.url }}/assets/lambda_on_4_monopole_3d_gain_plot.png" alt="3d radiation pattern plot">       
   <figcaption>3d radiation pattern plot</figcaption>
 </figure>
 
 
-<div id="orgd8a2fb5" class="figure">
+<div id="fig:lambda_on_4_monopole_3d_gain_plot" class="figure">
 <p><img src="../images/lambda_on_4_monopole_3d_gain_plot.png" alt="lambda_on_4_monopole_3d_gain_plot.png" />
 </p>
-<p><span class="figure-number">Figure 1: </span>3d gain plot pattern - radiated</p>
+<p><span class="figure-number">Figure 1:</span> 3d gain plot pattern - radiated</p>
 </div>
 
 
@@ -327,40 +336,42 @@ And polar plots of gain at various elevation angles
 </p>
 
 <figure>
-  <img src="{{ site.url }}/assets/lambda_on_4_monopole_polar_plots.png" alt="Radiation pattern slices">	
+  <img src="{{ site.url }}/assets/lambda_on_4_monopole_polar_plots.png" alt="Radiation pattern slices"> 
   <figcaption>Radiation pattern slice at 45 degrees elevation</figcaption>
 </figure>
 
 
-<div id="orga5fc2d1" class="figure">
+<div id="fig:lambda_on_4_monopole_polar_plots" class="figure">
 <p><img src="../images/lambda_on_4_monopole_polar_plots.png" alt="lambda_on_4_monopole_polar_plots.png" />
 </p>
-<p><span class="figure-number">Figure 2: </span>Polar plots of gain pattern at various elevation angles</p>
+<p><span class="figure-number">Figure 2:</span> Polar plots of gain pattern at various elevation angles</p>
 </div>
 </div>
 </div>
 
 
-<div id="outline-container-orgcc00aa1" class="outline-2">
-<h2 id="orgcc00aa1"><span class="section-number-2">4</span> Compute antenna performance sensitivity to realised length</h2>
+<div id="outline-container-sec-4" class="outline-2">
+<h2 id="sec-4"><span class="section-number-2">4</span> Compute antenna performance sensitivity to realised length</h2>
 </div>
 
-<div id="outline-container-orge0cf357" class="outline-2">
-<h2 id="orge0cf357"><span class="section-number-2">5</span> Compute antenna performance sensitivity (bandwith) to wire thickness</h2>
+<div id="outline-container-sec-5" class="outline-2">
+<h2 id="sec-5"><span class="section-number-2">5</span> Compute antenna performance sensitivity (bandwith) to wire thickness</h2>
 </div>
 
-<div id="outline-container-orgd21fafb" class="outline-2">
-<h2 id="orgd21fafb"><span class="section-number-2">6</span> Compute a suitable bandpass impedance matching network</h2>
+<div id="outline-container-sec-6" class="outline-2">
+<h2 id="sec-6"><span class="section-number-2">6</span> Compute a suitable bandpass impedance matching network</h2>
 <div class="outline-text-2" id="text-6">
 <div class="org-src-container">
-<pre class="src src-python" id="org677b702"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">compute_bp_matching_network</span>(z0, zl):
+
+<pre class="src src-python" id="airbandmonopole-compute-matching-network"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">compute_bp_matching_network</span>(z0, zl):
     <span style="color: #a020f0;">return</span> 0.0
 </pre>
 </div>
 
 
 <div class="org-src-container">
-<pre class="src src-python" id="orgc8fb2f5"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">main</span>():
+
+<pre class="src src-python" id="airbandmonopole-main"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">main</span>():
 
     <span style="color: #a0522d;">parser</span> = ArgumentParser(description=<span style="color: #8b2252;">"Optimise monopole and compute matching network."</span>)
     <span style="color: #a0522d;">args</span> = parser.parse_args()
@@ -387,7 +398,8 @@ And polar plots of gain at various elevation angles
 </div>
 
 <div class="org-src-container">
-<pre class="src src-shell" id="org30c977b">python airbandmonopole.py 2&gt;&amp;1
+
+<pre class="src src-sh" id="bashrun-airbandmonopole">python airbandmonopole.py 2&gt;&amp;1
 true
 </pre>
 </div>
@@ -399,7 +411,6 @@ thetas.shape = (720,)
 phis.shape = (180,)
 THETA.shape = (180, 720)
 PHI.shape = (180, 720)
-
 </pre>
 </div>
 </div>

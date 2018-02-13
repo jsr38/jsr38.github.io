@@ -8,19 +8,21 @@ tags : [technical, sdr, rtl-sdr]
 {% include JB/setup %}
 </p>
 
-<div id="outline-container-orgddfc2a7" class="outline-2">
-<h2 id="orgddfc2a7"><span class="section-number-2">1</span> Get the source and build the software</h2>
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1"><span class="section-number-2">1</span> Get the source and build the software</h2>
 <div class="outline-text-2" id="text-1">
 <p>
 There seem to be heaps of forks of rtl-sdr on github but judging from comments in the issue trackers, and the official osmocom homepage, <a href="https://osmocom.org/projects/sdr">https://osmocom.org/projects/sdr</a> the official repository is the one hosted by osmocom here  as noted on their wiki <a href="https://osmocom.org/projects/sdr/wiki/Rtl-sdr">https://osmocom.org/projects/sdr/wiki/Rtl-sdr</a>  there is an official github mirror which is <a href="https://github.com/steve-m/librtlsdr">https://github.com/steve-m/librtlsdr</a> .
 </p>
 
-<pre class="example" id="osmocom-rtlsdr-git">
+<pre class="example">
 git clone git://git.osmocom.org/rtl-sdr.git
 </pre>
 
 <p>
-On MacOS X the homebrew packaged rtl-sdr seems to work as-is, however, the Ubuntu package <code class="src src-shell">librtlsdr0</code> 
+On MacOS X the homebrew packaged rtl-sdr seems to work as-is, however, the Ubuntu package #+BEGIN_SRC shell
+librtlsdr0
+#+END_SRC 
 </p>
 
 <p>
@@ -31,14 +33,14 @@ There is an implementation of individual stage gain setting specifically for R82
 To begin with, in order to not reinvent the wheel unnecessarily, I made use of some existing scanning tool <a href="https://github.com/EarToEarOak/RTLSDR-Scanner">https://github.com/EarToEarOak/RTLSDR-Scanner</a> which appears to be actively maintained at the time of writing.
 </p>
 
-<pre class="example" id="osmocom-rtlsdr-git">
+<pre class="example">
 git clone git@github.com:EarToEarOak/RTLSDR-Scanner.git
 </pre>
 </div>
 </div>
 
-<div id="outline-container-org91a32b3" class="outline-2">
-<h2 id="org91a32b3"><span class="section-number-2">2</span> Configure for an initial scan</h2>
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2"><span class="section-number-2">2</span> Configure for an initial scan</h2>
 <div class="outline-text-2" id="text-2">
 <p>
 The scanner software starts with default settings that produce a single sweep of the FM broadcast band for my current location.
@@ -51,20 +53,20 @@ The scanner software starts with default settings that produce a single sweep of
 </div>
 
 <figure>
-  <img src="{{ site.url }}/assets/rtlsdr_scanning_broadcastfm_screen.png" alt="FM broadcast band sweep" width="75%">	
+  <img src="{{ site.url }}/assets/rtlsdr_scanning_broadcastfm_screen.png" alt="FM broadcast band sweep" width="75%">    
   <figcaption>FM broadcast band sweep</figcaption>
 </figure>
 </div>
 </div>
 
-<div id="outline-container-org48fee6c" class="outline-2">
-<h2 id="org48fee6c"><span class="section-number-2">3</span> The hardware configuration</h2>
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3"><span class="section-number-2">3</span> The hardware configuration</h2>
 </div>
 
 
 
-<div id="outline-container-org407dc77" class="outline-2">
-<h2 id="org407dc77"><span class="section-number-2">4</span> More accurate SDR software</h2>
+<div id="outline-container-sec-4" class="outline-2">
+<h2 id="sec-4"><span class="section-number-2">4</span> More accurate SDR software</h2>
 <div class="outline-text-2" id="text-4">
 <p>
 Investigate linrad <a href="http://www.sm5bsz.com/linuxdsp/linrad.htm">http://www.sm5bsz.com/linuxdsp/linrad.htm</a> .  At the time of writing, the subversion repository <a href="https://svn.code.sf.net/p/linrad/code/trunk">https://svn.code.sf.net/p/linrad/code/trunk</a> seems to not build.  Cursory inspection suggests it is a genuine problem with what is checked in to the repository, however, not being familar with the software it is possible the build failure is particular to my build environment.  I've built the latest source tarball which does not appear to suffer the same problem.
@@ -72,8 +74,8 @@ Investigate linrad <a href="http://www.sm5bsz.com/linuxdsp/linrad.htm">http://ww
 </div>
 </div>
 
-<div id="outline-container-org77113d9" class="outline-2">
-<h2 id="org77113d9"><span class="section-number-2">5</span> Weather satellite APT</h2>
+<div id="outline-container-sec-5" class="outline-2">
+<h2 id="sec-5"><span class="section-number-2">5</span> Weather satellite APT</h2>
 <div class="outline-text-2" id="text-5">
 <p>
 What's all this for?  We want to receive weather satellite transmissions.  The source for detailed information I've used is <a href="http://noaasis.noaa.gov/NOAASIS/pubs/Users_Guide-Building_Receive_Stations_March_2009.pdf">http://noaasis.noaa.gov/NOAASIS/pubs/Users_Guide-Building_Receive_Stations_March_2009.pdf</a> .
@@ -86,8 +88,8 @@ The frequencies of interest are 137.50, 137.62, 137.1, 137.9125 MHz inside the a
 </div>
 
 
-<div id="outline-container-orgbf3a451" class="outline-2">
-<h2 id="orgbf3a451"><span class="section-number-2">6</span> Understanding the spectrum around 137MHz</h2>
+<div id="outline-container-sec-6" class="outline-2">
+<h2 id="sec-6"><span class="section-number-2">6</span> Understanding the spectrum around 137MHz</h2>
 <div class="outline-text-2" id="text-6">
 <p>
 scan_137.0-138.0MHz.png
@@ -100,7 +102,7 @@ scan_137.0-138.0MHz.png
 </div>
 
 <figure>
-  <img src="{{ site.url }}/assets/scan_137.0-138.0MHz.png" alt="Spectrum 137-138MHz" width="75%">	
+  <img src="{{ site.url }}/assets/scan_137.0-138.0MHz.png" alt="Spectrum 137-138MHz" width="75%">       
   <figcaption>Spectrum 137-138MHz</figcaption>
 </figure>
 
@@ -115,7 +117,7 @@ Of note are the artifacts at 250kHz spacing.  The same scan parameters were used
 </div>
 
 <figure>
-  <img src="{{ site.url }}/assets/scan_135.0-140.0MHz.png" alt="Spectrum 135-140MHz" width="75%">	
+  <img src="{{ site.url }}/assets/scan_135.0-140.0MHz.png" alt="Spectrum 135-140MHz" width="75%">       
   <figcaption>Spectrum 135-140MHz</figcaption>
 </figure>
 
@@ -130,26 +132,29 @@ Repeating the same scan using 32K FFT bins indicates artifacts at 125kHz interva
 </div>
 
 <figure>
-  <img src="{{ site.url }}/assets/scan_135.0-140.0MHz_32kFFT.png" alt="Spectrum 135-140MHz 32K FFT bins" width="75%">	
+  <img src="{{ site.url }}/assets/scan_135.0-140.0MHz_32kFFT.png" alt="Spectrum 135-140MHz 32K FFT bins" width="75%">   
   <figcaption>Spectrum 135-140MHz 32k FFT bins</figcaption>
 </figure>
 
 <p>
-The software reports <code class="src src-shell">Exact sample rate is: 2000000.052982 Hz</code> which for IQ sampling implies a bandwidth of the same.  If these artifacts are the result of aliasing then what's going on?
+The software reports #+BEGIN_SRC shell
+Exact sample rate is: 2000000.052982 Hz
+#+END_SRC which for IQ sampling implies a bandwidth of the same.  If these artifacts are the result of aliasing then what's going on?
 </p>
 </div>
 </div>
 
 
-<div id="outline-container-org0e79e27" class="outline-2">
-<h2 id="org0e79e27"><span class="section-number-2">7</span> What is rtlsdr_scanner doing in detail?</h2>
+<div id="outline-container-sec-7" class="outline-2">
+<h2 id="sec-7"><span class="section-number-2">7</span> What is rtlsdr_scanner doing in detail?</h2>
 <div class="outline-text-2" id="text-7">
 <p>
 Take a look here: <a href="https://github.com/EarToEarOak/RTLSDR-Scanner/blob/master/rtlsdr_scanner/scan.py">https://github.com/EarToEarOak/RTLSDR-Scanner/blob/master/rtlsdr_scanner/scan.py</a> .  
 </p>
 
 <div class="org-src-container">
-<pre class="src src-python" id="orgfd65c11"><span style="color: #a0522d;">SAMPLE_RATE</span> = 2e6
+
+<pre class="src src-python" id="rtlsdr_scanner_constants.py"><span style="color: #a0522d;">SAMPLE_RATE</span> = 2e6
 <span style="color: #a0522d;">BANDWIDTH</span> = 500e3
 </pre>
 </div>
@@ -159,17 +164,17 @@ Take a look here: <a href="https://github.com/EarToEarOak/RTLSDR-Scanner/blob/ma
 
 
 
-<div id="outline-container-orgcd9d62f" class="outline-2">
-<h2 id="orgcd9d62f"><span class="section-number-2">8</span> Patching rtlsdr for individual stage gain setting</h2>
+<div id="outline-container-sec-8" class="outline-2">
+<h2 id="sec-8"><span class="section-number-2">8</span> Patching rtlsdr for individual stage gain setting</h2>
 </div>
 
 
-<div id="outline-container-org2937c64" class="outline-2">
-<h2 id="org2937c64"><span class="section-number-2">9</span> Intermodulation products and gain</h2>
+<div id="outline-container-sec-9" class="outline-2">
+<h2 id="sec-9"><span class="section-number-2">9</span> Intermodulation products and gain</h2>
 </div>
 
 
 
-<div id="outline-container-org087c03a" class="outline-2">
-<h2 id="org087c03a"><span class="section-number-2">10</span> Automating the scan</h2>
+<div id="outline-container-sec-10" class="outline-2">
+<h2 id="sec-10"><span class="section-number-2">10</span> Automating the scan</h2>
 </div>

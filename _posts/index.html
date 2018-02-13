@@ -3,8 +3,8 @@
 {% for post in site.posts limit: 5 %}
   &lt;div class="post<sub>info</sub>"&gt;
     &lt;li&gt;
-	    &lt;a href="{{ post.url }}"&gt;{{ post.title }}&lt;/a&gt;
-	    &lt;span&gt;({{ post.date | date:"%Y-%m-%d" }})&lt;/span&gt;
+            &lt;a href="{{ post.url }}"&gt;{{ post.title }}&lt;/a&gt;
+            &lt;span&gt;({{ post.date | date:"%Y-%m-%d" }})&lt;/span&gt;
     &lt;/li&gt;
     &lt;/br&gt; &lt;em&gt;{{ post.excerpt }} &lt;/em&gt;
     &lt;/div&gt;

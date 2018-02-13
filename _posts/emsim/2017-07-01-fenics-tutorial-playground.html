@@ -11,7 +11,8 @@ tags : [fem, fenics, emtheory]
 
 
 <div class="org-src-container">
-<pre class="src src-python" id="org26e4373"><span style="color: #a020f0;">import</span> os
+
+<pre class="src src-python" id="fenics_tut_11-main-imports"><span style="color: #a020f0;">import</span> os
 <span style="color: #a020f0;">import</span> re
 <span style="color: #a020f0;">import</span> requests
 <span style="color: #a020f0;">import</span> sys
@@ -22,7 +23,8 @@ tags : [fem, fenics, emtheory]
 </div>
 
 <div class="org-src-container">
-<pre class="src src-python" id="org39e50e5"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">main</span>():
+
+<pre class="src src-python" id="fenics_tut_11-main"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">main</span>():
     <span style="color: #a0522d;">parser</span> = ArgumentParser(description=<span style="color: #8b2252;">"Download files linked to by web page."</span>)
     parser.add_argument(<span style="color: #8b2252;">"-u"</span>, <span style="color: #8b2252;">"--url"</span>, 
                         <span style="color: #483d8b;">type</span>=<span style="color: #483d8b;">str</span>,
@@ -53,12 +55,8 @@ tags : [fem, fenics, emtheory]
 </div>
 
 <div class="org-src-container">
-<pre class="src src-shell" id="orgb935b01">python fenics_tut_11.py --url http://emlab.utep.edu/ee3321emf.htm --regex <span style="color: #a0522d;">href</span>=<span style="color: #8b2252;">\"</span>.*<span style="color: #8b2252;">\(</span>Homework.*.pdf<span style="color: #8b2252;">\)\"</span> --dest ../downloads/ee3321emf/ 2&gt;&amp;1
+
+<pre class="src src-sh" id="bashrun-fenics_tut_11">python fenics_tut_11.py --url http://emlab.utep.edu/ee3321emf.htm --regex <span style="color: #a0522d;">href</span>=<span style="color: #8b2252;">\"</span>.*<span style="color: #8b2252;">\(</span>Homework.*.pdf<span style="color: #8b2252;">\)\"</span> --dest ../downloads/ee3321emf/ 2&gt;&amp;1
 true
 </pre>
 </div>
-
-<pre class="example">
-python: can't open file 'fenics_tut_11.py': [Errno 2] No such file or directory
-
-</pre>

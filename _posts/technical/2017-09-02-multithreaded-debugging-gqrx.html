@@ -8,14 +8,14 @@ tags : [technical, c++, gdb, sdr, gqrx]
 {% include JB/setup %}
 </p>
 
-<div id="outline-container-org404143e" class="outline-2">
-<h2 id="org404143e"><span class="section-number-2">1</span> Gqrx didn't want to start on my Ubuntu 17.04 system</h2>
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1"><span class="section-number-2">1</span> Gqrx didn't want to start on my Ubuntu 17.04 system</h2>
 <div class="outline-text-2" id="text-1">
 <p>
 At first I thought it might be peculiar to my build but SEGFAULT appeared with the Ubuntu provided package too.  Check that the problem is the same in both cases.
 </p>
 
-<pre class="example" id="source-built">
+<pre class="example">
 Thread 1 "gqrx" received signal SIGSEGV, Segmentation fault.
 0x00007ffff638f858 in boost::asio::detail::task_io_service::shutdown_service() () from /usr/lib/x86_64-linux-gnu/libgnuradio-blocks.so.3.7.10
 (gdb) bt
@@ -46,19 +46,21 @@ Thread 1 "gqrx" received signal SIGSEGV, Segmentation fault.
 </pre>
 
 <p>
-The standard Ubuntu packaged <code class="src src-shell">gqrx</code> does not contain debug symbols so I referred to Ubuntu's advice <a href="https://wiki.ubuntu.com/Debug%20Symbol%20Packages">https://wiki.ubuntu.com/Debug Symbol Packages</a> .  Instead of using the Ubuntu script designed to attach to a running process and dump
+The standard Ubuntu packaged #+BEGIN_SRC shell
+gqrx
+#+END_SRC does not contain debug symbols so I referred to Ubuntu's advice <a href="https://wiki.ubuntu.com/Debug%20Symbol%20Packages">https://wiki.ubuntu.com/Debug%20Symbol%20Packages</a> .  Instead of using the Ubuntu script designed to attach to a running process and dump
 </p>
 
 <p>
 We note that the stack trace for the source built version is missing debug information for libuhd so we'll grab that as well as gqrx debug symbols. 
 </p>
 
-<pre class="example" id="url-example">
+<pre class="example">
 http://emlab.utep.edu/ee3321emf.htm
 </pre>
 
 
-<pre class="example" id="ubuntu-built">
+<pre class="example">
 Thread 1 "gqrx" received signal SIGSEGV, Segmentation fault.
 0x00007ffff6a83858 in boost::asio::detail::task_io_service::shutdown_service() () from /usr/lib/x86_64-linux-gnu/libgnuradio-blocks.so.3.7.10
 (gdb) bt
@@ -84,15 +86,18 @@ Happily, we see that the stack traces are identical (up to address) so it seems 
 </div>
 </div>
 
-<div id="outline-container-orgfe3901f" class="outline-2">
-<h2 id="orgfe3901f"><span class="section-number-2">2</span> Someone else has already identified the problem&#x2026;</h2>
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2"><span class="section-number-2">2</span> Someone else has already identified the problem&#x2026;</h2>
 <div class="outline-text-2" id="text-2">
 <p>
-It's to do with both libuhd and libgnuradio-blocks both supplying differing implementations of <code class="src src-cpp"><span style="color: #008b8b;">boost</span>::<span style="color: #008b8b;">asio</span>::<span style="color: #008b8b;">detail</span>::task_io_service</code>
+It's to do with both libuhd and libgnuradio-blocks both supplying differing implementations of #+BEGIN_SRC cpp
+boost::asio::detail::task_io_service
+#+END_SRC
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell" id="orga8ed746"><span style="color: #483d8b;">export</span> <span style="color: #a0522d;">LD_PRELOAD</span>=/usr/lib/x86_64-linux-gnu/libuhd.so.003
+
+<pre class="src src-sh" id="ldpreload-example"><span style="color: #483d8b;">export</span> <span style="color: #a0522d;">LD_PRELOAD</span>=/usr/lib/x86_64-linux-gnu/libuhd.so.003
 </pre>
 </div>
 </div>
