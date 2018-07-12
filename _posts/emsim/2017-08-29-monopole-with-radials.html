@@ -1,15 +1,15 @@
 ---
 layout: page
 category : emsim
-tagline: "necpp MoM simulation of a monpole with radial ground screen wires"
+tagline: "necpp MoM antenna simulation of a monopole with radial ground screen wires"
 tags : [mom, necpp, emtheory]
 ---
 <p>
 {% include JB/setup %}
 </p>
 
-<div id="outline-container-org907f9a0" class="outline-2">
-<h2 id="org907f9a0"><span class="section-number-2">1</span> Calculations</h2>
+<div id="outline-container-orgd3ba571" class="outline-2">
+<h2 id="orgd3ba571"><span class="section-number-2">1</span> Calculations</h2>
 <div class="outline-text-2" id="text-1">
 <div class="org-src-container">
 <pre class="src src-python"><span style="color: #a020f0;">return</span> <span style="color: #8b2252;">"{0:0.3f}"</span>.<span style="color: #483d8b;">format</span>(3e8 / 118e6 / 4)
@@ -26,11 +26,11 @@ Approximate monopole length in metres.
 </div>
 
 
-<div id="outline-container-org4016b1e" class="outline-2">
-<h2 id="org4016b1e"><span class="section-number-2">2</span> Perfect ground \(\frac{\lambda}{4}\) monopole</h2>
+<div id="outline-container-org66c19c8" class="outline-2">
+<h2 id="org66c19c8"><span class="section-number-2">2</span> Perfect ground \(\frac{\lambda}{4}\) monopole</h2>
 <div class="outline-text-2" id="text-2">
 <div class="org-src-container">
-<pre class="src src-python" id="org2929879"><span style="color: #a020f0;">from</span> argparse <span style="color: #a020f0;">import</span> ArgumentParser
+<pre class="src src-python" id="org9a1bec8"><span style="color: #a020f0;">from</span> argparse <span style="color: #a020f0;">import</span> ArgumentParser
 <span style="color: #a020f0;">from</span> PyNEC <span style="color: #a020f0;">import</span> *
 
 <span style="color: #a020f0;">import</span> logging
@@ -50,7 +50,7 @@ The following are simulation parameters, fundamental constants and derived param
 </p>
 
 <div class="org-src-container">
-<pre class="src src-python" id="orgcc184e4"><span style="color: #a0522d;">C</span> = 299792458
+<pre class="src src-python" id="orgd3bef5e"><span style="color: #a0522d;">C</span> = 299792458
 <span style="color: #8b2252;">"""float: c (ms^1), universal physical constant for speed of light in a vacuum.</span>
 
 <span style="color: #8b2252;">"""</span>
@@ -149,7 +149,7 @@ Some global variables used to track the optimisation path
 </p>
 
 <div class="org-src-container">
-<pre class="src src-python" id="orge5d0857"><span style="color: #a0522d;">z_path</span> = np.ndarray(shape=(1,0), dtype=<span style="color: #483d8b;">complex</span>)
+<pre class="src src-python" id="org4df419e"><span style="color: #a0522d;">z_path</span> = np.ndarray(shape=(1,0), dtype=<span style="color: #483d8b;">complex</span>)
 <span style="color: #a0522d;">gamma_path</span> = np.ndarray(shape=(1,0), dtype=<span style="color: #483d8b;">float</span>)
 </pre>
 </div>
@@ -159,7 +159,7 @@ This function simply computes \(\Gamma\), the reflection coefficient for a parti
 </p>
 
 <div class="org-src-container">
-<pre class="src src-python" id="org0fdd0b1"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">reflection_coefficient</span>(z, z0):
+<pre class="src src-python" id="org4914c17"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">reflection_coefficient</span>(z, z0):
     <span style="color: #a020f0;">return</span> np.<span style="color: #483d8b;">abs</span>((z - z0) / (z + z0))
 
 <span style="color: #a020f0;">def</span> <span style="color: #0000ff;">vswr</span>(z, z0):
@@ -177,7 +177,7 @@ We construct the antenna geometry, in this case a single wire oriented in the po
 </p>
 
 <div class="org-src-container">
-<pre class="src src-python" id="org0259f2f"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">geometry</span>(base, length, r_w, radial_len,
+<pre class="src src-python" id="org0b743cf"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">geometry</span>(base, length, r_w, radial_len,
              radial_offset, n_radials, theta_radial,
              n_segments,
              construct_nec_context=<span style="color: #008b8b;">True</span>,
@@ -364,7 +364,7 @@ We construct the antenna geometry, in this case a single wire oriented in the po
 </div>
 
 <div class="org-src-container">
-<pre class="src src-python" id="orge3314c0"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">set_frequencies_linear</span>(context, start_frequency, stop_frequency,
+<pre class="src src-python" id="org3c774a5"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">set_frequencies_linear</span>(context, start_frequency, stop_frequency,
                            count=<span style="color: #008b8b;">None</span>, step_size=<span style="color: #008b8b;">None</span>):
     <span style="color: #8b2252;">""" If start_frequency does not equal stop_frequency, either count or </span>
 <span style="color: #8b2252;">      step should be specified. The other parameter will be automatically deduced """</span>
@@ -399,7 +399,7 @@ We construct the antenna geometry, in this case a single wire oriented in the po
 </div>
 
 <div class="org-src-container">
-<pre class="src src-python" id="org97a158c"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">compute_impedance</span>(context, frequency):
+<pre class="src src-python" id="org1eb202d"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">compute_impedance</span>(context, frequency):
 
       set_frequency(context, frequency)
       set_excitation(context)
@@ -416,7 +416,7 @@ We construct the antenna geometry, in this case a single wire oriented in the po
 
 
 <div class="org-src-container">
-<pre class="src src-python" id="orga6265f2"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">cost_function</span>(x):
+<pre class="src src-python" id="orgc27c37c"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">cost_function</span>(x):
 
     <span style="color: #a0522d;">radial_len</span> = x[2]
     <span style="color: #a0522d;">radial_offset</span> = 0.0
@@ -453,7 +453,7 @@ The main optimisation function below attempts to minimise the reflection coeffic
 
 
 <div class="org-src-container">
-<pre class="src src-python" id="org626e54a"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">optimise_antenna</span>():
+<pre class="src src-python" id="org4b09654"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">optimise_antenna</span>():
 
     <span style="color: #b22222;"># </span><span style="color: #b22222;">Starting value </span>
     <span style="color: #a0522d;">freq</span> = FREQ
@@ -502,7 +502,7 @@ The geometry yielding these simulated parameters is shown in figure <a href="#mo
 </figure>
 
 
-<div id="orgd9d881d" class="figure">
+<div id="orge13b9aa" class="figure">
 <p><img src="../images/monopole_radials_geom.png" alt="monopole_radials_geom.png" />
 </p>
 <p><span class="figure-number">Figure 1: </span>Optimised antenna geometry</p>
@@ -511,11 +511,11 @@ The geometry yielding these simulated parameters is shown in figure <a href="#mo
 </div>
 
 
-<div id="outline-container-org2f69aff" class="outline-2">
-<h2 id="org2f69aff"><span class="section-number-2">3</span> Compute the radiation pattern for the optimised antenna and plot</h2>
+<div id="outline-container-org5dd2a79" class="outline-2">
+<h2 id="org5dd2a79"><span class="section-number-2">3</span> Compute the radiation pattern for the optimised antenna and plot</h2>
 <div class="outline-text-2" id="text-3">
 <div class="org-src-container">
-<pre class="src src-python" id="orgcb46ebc"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">plot_radiation_pattern</span>(context):
+<pre class="src src-python" id="org54c5dab"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">plot_radiation_pattern</span>(context):
 
     <span style="color: #b22222;"># </span><span style="color: #b22222;">Group III cards</span>
     <span style="color: #b22222;">#</span><span style="color: #b22222;">add a "rp" card to specify radiation pattern sampling parameters </span>
@@ -611,7 +611,7 @@ The geometry yielding these simulated parameters is shown in figure <a href="#mo
 </figure>
 
 
-<div id="org8738e2d" class="figure">
+<div id="org0b441e3" class="figure">
 <p><img src="../images/monopole_radials_3d_gain_plot.png" alt="monopole_radials_3d_gain_plot.png" />
 </p>
 <p><span class="figure-number">Figure 2: </span>3d gain plot pattern - radiated</p>
@@ -628,7 +628,7 @@ And polar plots of gain at various elevation angles
 </figure>
 
 
-<div id="org1b3a61c" class="figure">
+<div id="orgbaffda7" class="figure">
 <p><img src="../images/monopole_radials_polar_plots.png" alt="monopole_radials_polar_plots.png" />
 </p>
 <p><span class="figure-number">Figure 3: </span>Polar plots of gain pattern at various elevation angles</p>
@@ -637,15 +637,15 @@ And polar plots of gain at various elevation angles
 </div>
 
 
-<div id="outline-container-org12c572d" class="outline-2">
-<h2 id="org12c572d"><span class="section-number-2">4</span> VSWR as a function of frequency</h2>
+<div id="outline-container-orgd7b92d6" class="outline-2">
+<h2 id="orgd7b92d6"><span class="section-number-2">4</span> VSWR as a function of frequency</h2>
 <div class="outline-text-2" id="text-4">
 <p>
 For our optimised antenna, how does the effective match to a \(50 \Omega \) load vary with frequency?
 </p>
 
 <div class="org-src-container">
-<pre class="src src-python" id="orgf126d85"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">compute_vswr</span>(context):
+<pre class="src src-python" id="org30d66ee"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">compute_vswr</span>(context):
 
     <span style="color: #a0522d;">count</span> = 50
     set_frequencies_linear(context, FREQ - BANDWIDTH/2.0,
@@ -667,7 +667,7 @@ For our optimised antenna, how does the effective match to a \(50 \Omega \) load
 </div>
 
 <div class="org-src-container">
-<pre class="src src-python" id="org4c372bf"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">plot_vswr</span>(freqs, vswrs):
+<pre class="src src-python" id="org25df9fa"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">plot_vswr</span>(freqs, vswrs):
 
     <span style="color: #a0522d;">fig</span> = plt.figure()
     <span style="color: #b22222;"># </span><span style="color: #b22222;">Plot cartesian, linear scale</span>
@@ -693,7 +693,7 @@ The plot in figure <a href="#monopole_radials_vswr">monopole_radials_vswr</a> sh
 </figure>
 
 
-<div id="org90d0ad7" class="figure">
+<div id="org5ca2d30" class="figure">
 <p><img src="../images/monopole_radials_vswr.png" alt="monopole_radials_vswr.png" />
 </p>
 <p><span class="figure-number">Figure 4: </span>VSWR for 50 ohm system</p>
@@ -702,8 +702,8 @@ The plot in figure <a href="#monopole_radials_vswr">monopole_radials_vswr</a> sh
 </div>
 
 
-<div id="outline-container-org345f7f6" class="outline-2">
-<h2 id="org345f7f6"><span class="section-number-2">5</span> Performance sensitivity to realised length</h2>
+<div id="outline-container-org4c4ff76" class="outline-2">
+<h2 id="org4c4ff76"><span class="section-number-2">5</span> Performance sensitivity to realised length</h2>
 <div class="outline-text-2" id="text-5">
 <p>
 For a real-world antenna with construction defects, what is the effect on antenna impedance of the driven element and radials having lengths that deviate from the ideal computed value?  We attempt to compute the partial derivative of \(Z\) with respect to \(l_d\) by taking finite differences around the optimised value of \(l_d\) and estimate our construction tolerance \(\sigma l = 0.01\).  For some small \(h\) we have
@@ -715,7 +715,7 @@ For a real-world antenna with construction defects, what is the effect on antenn
 
 
 <div class="org-src-container">
-<pre class="src src-python" id="org7203d14"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">compute_dz_dl_e</span>(base, length, r_w, radial_len,
+<pre class="src src-python" id="org5114923"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">compute_dz_dl_e</span>(base, length, r_w, radial_len,
                     radial_offset, n_radials, theta_radial,
                     h):
 
@@ -750,31 +750,31 @@ For a real-world antenna with construction defects, what is the effect on antenn
 
 
 
-<div id="outline-container-orgc3b950e" class="outline-2">
-<h2 id="orgc3b950e"><span class="section-number-2">6</span> Performance sensitivity to realised length</h2>
+<div id="outline-container-org92dd90f" class="outline-2">
+<h2 id="org92dd90f"><span class="section-number-2">6</span> Performance sensitivity to realised length</h2>
 </div>
 
 
-<div id="outline-container-org157270e" class="outline-2">
-<h2 id="org157270e"><span class="section-number-2">7</span> Compute antenna performance sensitivity (bandwith) to wire thickness</h2>
+<div id="outline-container-org05dbaed" class="outline-2">
+<h2 id="org05dbaed"><span class="section-number-2">7</span> Compute antenna performance sensitivity (bandwith) to wire thickness</h2>
 </div>
 
-<div id="outline-container-orge13b905" class="outline-2">
-<h2 id="orge13b905"><span class="section-number-2">8</span> Compute a suitable bandpass impedance matching network</h2>
+<div id="outline-container-org1dfa0db" class="outline-2">
+<h2 id="org1dfa0db"><span class="section-number-2">8</span> Compute a suitable bandpass impedance matching network</h2>
 <div class="outline-text-2" id="text-8">
 <div class="org-src-container">
-<pre class="src src-python" id="org6dd1434"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">compute_bp_matching_network</span>(z0, zl):
+<pre class="src src-python" id="orgff99f3a"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">compute_bp_matching_network</span>(z0, zl):
     <span style="color: #a020f0;">return</span> 0.0
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-orga4e4862" class="outline-2">
-<h2 id="orga4e4862"><span class="section-number-2">9</span> Investigate sensitivity to circularly polarised incident radiation</h2>
+<div id="outline-container-org3c16405" class="outline-2">
+<h2 id="org3c16405"><span class="section-number-2">9</span> Investigate sensitivity to circularly polarised incident radiation</h2>
 <div class="outline-text-2" id="text-9">
 <div class="org-src-container">
-<pre class="src src-python" id="orgb3d8adc"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">main</span>():
+<pre class="src src-python" id="orga1b1d75"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">main</span>():
 
     <span style="color: #a0522d;">parser</span> = ArgumentParser(description=<span style="color: #8b2252;">"Optimise monopole and compute matching network."</span>)
     <span style="color: #a0522d;">args</span> = parser.parse_args()
@@ -844,7 +844,7 @@ For a real-world antenna with construction defects, what is the effect on antenn
 </div>
 
 <div class="org-src-container">
-<pre class="src src-shell" id="orgfcf1444">python monopoleradials.py 2&gt;&amp;1
+<pre class="src src-sh" id="orgb398a93">python monopoleradials.py 2&gt;&amp;1
 true
 </pre>
 </div>
@@ -868,9 +868,6 @@ phis.shape = (720,) [0.0,6.274273611111111]
 gains \in [5.1826184832943545e-06,1.4704535189360104]
 THETA.shape = (720, 180)
 PHI.shape = (720, 180)
-[ 51.82254573-5.65522919j]
-[ 53.83853393+4.61879141j]
-dl10: [-2.0159882-10.2740206j]
 </pre>
 </div>
 </div>

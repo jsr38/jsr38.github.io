@@ -1,0 +1,50 @@
+---
+layout: post
+category : technical
+tagline: "Building and testing Android apps under gradle outside of Android Studio"
+tags : [technical, android, gradle, java]
+---
+<p>
+{% include JB/setup %}
+</p>
+
+<div id="outline-container-orgadf82b5" class="outline-2">
+<h2 id="orgadf82b5"><span class="section-number-2">1</span> Android app gradle build failure</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+After rebuilding MacOS X and only having a JDK 9x present, gradle builds failed with 
+</p>
+
+<pre class="example" id="osmocom-rtlsdr-git">
+Caused by: java.lang.NoClassDefFoundError: Could not initialize class com.android.sdklib.repository.AndroidSdkHandler
+</pre>
+
+<p>
+which <a href="https://stackoverflow.com/questions/46917365/error-could-not-initialize-class-com-android-sdklib-repository-androidsdkhandle">https://stackoverflow.com/questions/46917365/error-could-not-initialize-class-com-android-sdklib-repository-androidsdkhandle</a> indicates is caused by gradle running under JDK9 rather than JDK8.  Android Studio builds currently execute under JDK8 so
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh"><span style="color: #483d8b;">export</span> <span style="color: #a0522d;">JAVA_HOME</span>=<span style="color: #8b2252;">"/Applications/Android Studio.app/Contents/jre/jdk/Contents/Home"</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgcecf631" class="outline-2">
+<h2 id="orgcecf631"><span class="section-number-2">2</span> Espresso testing RecyclerView content</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+<a href="https://medium.com/@_rpiel/recyclerview-and-espresso-a-complicated-story-3f6f4179652e">https://medium.com/@_rpiel/recyclerview-and-espresso-a-complicated-story-3f6f4179652e</a>
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-orge029824" class="outline-2">
+<h2 id="orge029824"><span class="section-number-2">3</span> No-op android.jar not on CLASSPATH</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+For some reason, Android Studio / gradle gets into a state where the no-op throwing android.jar isn't included in the classpath used when invoking local unit tests.  A workaround is to run the test from gradle outside of the Android Studio.  This has fixed the CLASSPATH and now local unit tests seem to run correctly (android.jar is found).
+</p>
+</div>
+</div>

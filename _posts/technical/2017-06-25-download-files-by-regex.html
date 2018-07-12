@@ -8,8 +8,8 @@ tags : [technical, python]
 {% include JB/setup %}
 </p>
 
-<div id="outline-container-org453f8bb" class="outline-2">
-<h2 id="org453f8bb"><span class="section-number-2">1</span> Given a page, download linked to files matching regex</h2>
+<div id="outline-container-org6554b58" class="outline-2">
+<h2 id="org6554b58"><span class="section-number-2">1</span> Given a page, download linked to files matching regex</h2>
 <div class="outline-text-2" id="text-1">
 <p>
 Suppose we want to download all the tutorials from the following web page
@@ -29,7 +29,7 @@ We construct a suitable regex which is in this case
 
 
 <div class="org-src-container">
-<pre class="src src-python" id="orgd209dad"><span style="color: #a020f0;">import</span> os
+<pre class="src src-python" id="org23c6251"><span style="color: #a020f0;">import</span> os
 <span style="color: #a020f0;">import</span> re
 <span style="color: #a020f0;">import</span> requests
 <span style="color: #a020f0;">import</span> sys
@@ -40,7 +40,7 @@ We construct a suitable regex which is in this case
 </div>
 
 <div class="org-src-container">
-<pre class="src src-python" id="orga63b34f"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">download_file</span>(url, dest):
+<pre class="src src-python" id="org36649bd"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">download_file</span>(url, dest):
     <span style="color: #a0522d;">local_filename</span> = dest + url.split(<span style="color: #8b2252;">'/'</span>)[-1]
     <span style="color: #b22222;"># </span><span style="color: #b22222;">NOTE the stream=True parameter</span>
     <span style="color: #a0522d;">r</span> = requests.get(url, stream=<span style="color: #008b8b;">True</span>)
@@ -82,7 +82,7 @@ We construct a suitable regex which is in this case
 </div>
 
 <div class="org-src-container">
-<pre class="src src-shell" id="orgd819a17">python download_by_regex.py --url http://emlab.utep.edu/ee3321emf.htm --regex <span style="color: #a0522d;">href</span>=<span style="color: #8b2252;">\"</span>.*<span style="color: #8b2252;">\(</span>Homework.*.pdf<span style="color: #8b2252;">\)\"</span> --dest ../downloads/ee3321emf/ 2&gt;&amp;1
+<pre class="src src-sh" id="org5457421">python download_by_regex.py --url http://emlab.utep.edu/ee3321emf.htm --regex <span style="color: #a0522d;">href</span>=<span style="color: #8b2252;">\"</span>.*<span style="color: #8b2252;">\(</span>Homework.*.pdf<span style="color: #8b2252;">\)\"</span> --dest ../downloads/ee3321emf/ 2&gt;&amp;1
 true
 </pre>
 </div>

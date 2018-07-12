@@ -8,8 +8,8 @@ tags : [technical, c++, gdb, sdr, gqrx]
 {% include JB/setup %}
 </p>
 
-<div id="outline-container-org404143e" class="outline-2">
-<h2 id="org404143e"><span class="section-number-2">1</span> Gqrx didn't want to start on my Ubuntu 17.04 system</h2>
+<div id="outline-container-org2357b50" class="outline-2">
+<h2 id="org2357b50"><span class="section-number-2">1</span> Gqrx didn't want to start on my Ubuntu 17.04 system</h2>
 <div class="outline-text-2" id="text-1">
 <p>
 At first I thought it might be peculiar to my build but SEGFAULT appeared with the Ubuntu provided package too.  Check that the problem is the same in both cases.
@@ -84,15 +84,15 @@ Happily, we see that the stack traces are identical (up to address) so it seems 
 </div>
 </div>
 
-<div id="outline-container-orgfe3901f" class="outline-2">
-<h2 id="orgfe3901f"><span class="section-number-2">2</span> Someone else has already identified the problem&#x2026;</h2>
+<div id="outline-container-orgab0d389" class="outline-2">
+<h2 id="orgab0d389"><span class="section-number-2">2</span> Someone else has already identified the problem&#x2026;</h2>
 <div class="outline-text-2" id="text-2">
 <p>
 It's to do with both libuhd and libgnuradio-blocks both supplying differing implementations of <code class="src src-cpp"><span style="color: #008b8b;">boost</span>::<span style="color: #008b8b;">asio</span>::<span style="color: #008b8b;">detail</span>::task_io_service</code>
 </p>
 
 <div class="org-src-container">
-<pre class="src src-shell" id="orga8ed746"><span style="color: #483d8b;">export</span> <span style="color: #a0522d;">LD_PRELOAD</span>=/usr/lib/x86_64-linux-gnu/libuhd.so.003
+<pre class="src src-sh" id="orgbd88049"><span style="color: #483d8b;">export</span> <span style="color: #a0522d;">LD_PRELOAD</span>=/usr/lib/x86_64-linux-gnu/libuhd.so.003
 </pre>
 </div>
 </div>
