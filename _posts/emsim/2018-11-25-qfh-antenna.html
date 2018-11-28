@@ -1,0 +1,1055 @@
+---
+layout: page
+category : emsim
+tagline: "necpp MoM simulation of a quadrifilar helical antenna"
+tags : [mom, necpp, emtheory]
+---
+<p>
+{% include JB/setup %}
+</p>
+
+<div id="outline-container-orgec71d1c" class="outline-2">
+<h2 id="orgec71d1c"><span class="section-number-2">1</span> Preliminaries</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+From <a class='org-ref-reference' href="#balanis1982antenna">balanis1982antenna</a> we define the following parameters:
+</p>
+
+<dl class="org-dl">
+<dt>\(N\)</dt><dd>number of turns of the helix</dd>
+<dt>\(D\)</dt><dd>diameter of the helix</dd>
+<dt>\(S\)</dt><dd>spacing between turns</dd>
+</dl>
+
+<p>
+from here we define some derived parameters:
+</p>
+
+<dl class="org-dl">
+<dt>\(L\)</dt><dd>total length of antenna, \(L=NS\)</dd>
+<dt>\(L_n\)</dt><dd>total length of wire, \(L_n=NL_0=N\sqrt{S^2 + C^2}\) with \(L_0 = \sqrt{S^2 + C^2}\) and \(C=\pi D\), or the helix circumference</dd>
+<dt>\(\alpha\)</dt><dd>pitch angle, the angle formed between a line tangent to the helix wire and a plane with normal vector collinear with the helix axis.  \(\alpha = \arctan \left ( \frac{S}{\pi D} \right )\)</dd>
+</dl>
+</div>
+
+<div id="outline-container-org80a9698" class="outline-3">
+<h3 id="org80a9698"><span class="section-number-3">1.1</span> Axial mode, polarization and approximate dimensions</h3>
+<div class="outline-text-3" id="text-1-1">
+<p>
+We seek to operate the antenna in the axial mode, where the radiation pattern has one major lobe oriented along the helix axis.  In order to excite this mode, \(D\) and \(S\) must be large fractions of the wavelength.  We will initially consider an antenna designed for NOAA APT reception at a nominal frequency \(f=137.0\) MHz .
+</p>
+
+<p>
+In order to achieve circular polarization, also according to <a class='org-ref-reference' href="#balanis1982antenna">balanis1982antenna</a>, we must have \(\frac{3}{4} < \frac{C}{\lambda _0} < \frac{4}{3}\) with \(\frac{C}{\lambda _0} = 1\) optimum and a spacing \(S \approx \frac{\lambda _0}{4}\) resulting in values of \(12 \degree < \alpha < 18 \degree\) . Later we will use these values as initial values for optimising properties of the antenna.  Empirically derived expressions for various antenna properties have been derived <a class='org-ref-reference' href="#kraus1950antennas">kraus1950antennas</a> and we will later compare simulated values to values calculated using these empirical results.
+</p>
+</div>
+</div>
+
+
+<div id="outline-container-org269f4fe" class="outline-3">
+<h3 id="org269f4fe"><span class="section-number-3">1.2</span> Terminal impedance</h3>
+<div class="outline-text-3" id="text-1-2">
+<p>
+Given our basic geometry, the terminal impedance as found empirically is given approximately by
+</p>
+
+\begin{equation}
+R \approx 140 \frac{C}{\lambda_0}
+\end{equation}
+
+<p>
+which when combined with the conditions for circularly polarized operation, yields an impedance of \(Z = R \approx 140 \Omega\) which is clearly not equal to a typical co-axial transmission line characteristic impedance of \(Z_0 = 50 \Omega\).  Balanis <a class='org-ref-reference' href="#balanis1982antenna">balanis1982antenna</a> claims that a match closer to \(50 \Omega\) may be achieved by increasing the wire diameter close to the feed-point.  We shall seek to find the geometry of something that is simple to fabricate, such as a metal strip bonded to the helix wire, that brings the terminal impedance close to the transmission line characteristic impedance.
+</p>
+
+
+
+<div class="org-src-container">
+<pre class="src src-python"><span style="color: #a020f0;">return</span> <span style="color: #8b2252;">"Free-space wavelength for initial consideration $\lambda_0 = {0:0.3f}$ (m)"</span>.<span style="color: #483d8b;">format</span>(3e8 / 137e6)
+</pre>
+</div>
+<p>
+Free-space wavelength for initial consideration \(\lambda_0 = 2.190\)
+</p>
+</div>
+</div>
+</div>
+
+
+
+
+<div id="outline-container-org78374ff" class="outline-2">
+<h2 id="org78374ff"><span class="section-number-2">2</span> Construct the antenna geometry</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+The following python codes generate the antenna geometry.  The Moment Method implementation, necpp <a class='org-ref-reference' href="#molteno2014necpp">molteno2014necpp</a> is used since the antenna is electrically large and the invisaged construction method maps well to the geometric primitives by the method.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python" id="org7954767"><span style="color: #a020f0;">from</span> argparse <span style="color: #a020f0;">import</span> ArgumentParser
+<span style="color: #a020f0;">from</span> PyNEC <span style="color: #a020f0;">import</span> *
+
+<span style="color: #a020f0;">import</span> logging
+<span style="color: #a020f0;">import</span> matplotlib.pyplot <span style="color: #a020f0;">as</span> plt
+<span style="color: #a020f0;">import</span> mpl_toolkits.mplot3d.axes3d <span style="color: #a020f0;">as</span> axes3d
+<span style="color: #a020f0;">import</span> numpy <span style="color: #a020f0;">as</span> np
+<span style="color: #a020f0;">import</span> os
+<span style="color: #a020f0;">import</span> scipy.optimize
+<span style="color: #a020f0;">import</span> solid <span style="color: #a020f0;">as</span> sp
+<span style="color: #a020f0;">import</span> solid.utils
+<span style="color: #a020f0;">import</span> sys
+</pre>
+</div>
+
+<p>
+The following are simulation parameters, fundamental constants and derived parameters used by the simulation.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python" id="orgf565aed"><span style="color: #a0522d;">C</span> = 299792458
+<span style="color: #8b2252;">"""float: c (ms^{-1}), universal physical constant for speed of light in a vacuum.</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">FREQ</span> = 137.0
+<span style="color: #8b2252;">"""float: f (MHz) (\mu s ^{-1}), the excitation frequency applied to the test situation.</span>
+
+<span style="color: #8b2252;">Current value is chosen for the NOAA APT frequency of 137.0 MHz</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">LAMBDA_0</span> = C / (FREQ * 1e6)
+<span style="color: #8b2252;">"""float: \lambda _0 (m) , the nominal free-space wavelength for the design</span>
+
+
+<span style="color: #8b2252;">"""</span>
+
+
+<span style="color: #a0522d;">BANDWIDTH</span> = 1.0
+<span style="color: #8b2252;">"""float: f (MHz) (\mu s ^{-1}), the bandwidth over which the matching network should operate.</span>
+
+<span style="color: #8b2252;">Current value covers the range of exact transmitter frequencies, doppler corrected</span>
+<span style="color: #8b2252;">plus the effect of modulation of the carrier.</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">GROUND_CONDUCTIVITY</span> = 0.002
+<span style="color: #8b2252;">"""float: sigma (S), electrical conductivity of ground.</span>
+
+<span style="color: #8b2252;">Current value is something like that experienced around the upper Eastern</span>
+<span style="color: #8b2252;">seaboard of the United States.  Real valued conductivity is a function of</span>
+<span style="color: #8b2252;">angular frequency (omega) so this value should be altered to something realistic</span>
+<span style="color: #8b2252;"> based on our excitation frequency above.</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">GROUND_DIELECTRIC</span> = 10
+<span style="color: #8b2252;">"""float: epsilon_r (dimensionless), electrical dielectric 'constant' of ground.</span>
+
+<span style="color: #8b2252;">Strictly, this is the real part of the ground relative permittivity.</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">BASE</span> = 0.1
+<span style="color: #8b2252;">"""float: offset (m) from the ground in the z direction.</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">N_FILAMENTS</span> = 4
+<span style="color: #8b2252;">"""int: initial number () of filaments (quadrifilar initially)</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">N_SEGMENTS</span> = 30
+<span style="color: #8b2252;">"""int: initial number () of wire segments per turn</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">N</span> = 1
+<span style="color: #8b2252;">"""float: initial number () of (fractional) turns of the helix</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">C</span> = LAMBDA_0
+<span style="color: #8b2252;">"""float: initial circumference (m) of a single turn of the helix,</span>
+<span style="color: #8b2252;">          fixed by the circular polarization condition(s)</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">D</span> = C / np.pi
+<span style="color: #8b2252;">"""float: initial diameter (m) of the helix</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">S</span> = LAMBDA_0 / 4
+<span style="color: #8b2252;">"""float: spacing (m) between turns of the helix,</span>
+<span style="color: #8b2252;">          fixed by the circular polarization condition(s)</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">L</span> = N * S
+<span style="color: #8b2252;">"""float: total length (m) of antenna along helix axis</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">L_0</span> = np.sqrt(S ** 2 + C ** 2)
+<span style="color: #8b2252;">"""float: length (m) of wire used to form a single turn of the helix</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">L_F</span> = N * L_0
+<span style="color: #8b2252;">"""float: total length (m) of wire used to form a single filament</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">ALPHA</span> = np.arctan(S / (np.pi * D))
+<span style="color: #8b2252;">"""float: pitch angle (radians)</span>
+
+<span style="color: #8b2252;">"""</span>
+
+
+<span style="color: #a0522d;">N_CONNECTOR_HOLE_PITCH</span> = 0.01824
+<span style="color: #8b2252;">"""float: hole pitch (m) of panel mount N connector mount holes</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">CONDUCTIVITY_SS</span> = 1.45e6
+<span style="color: #8b2252;">"""float: sigma (S), electrical conductivity of stainless steel.</span>
+
+<span style="color: #8b2252;">Real part of admittivity is conductivity and is a function of angular frequency</span>
+<span style="color: #8b2252;"> (omega) so this value should be altered to something realistic based on our </span>
+<span style="color: #8b2252;">excitation frequency above.</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">CONDUCTIVITY_CU</span> = 5.96e7
+<span style="color: #8b2252;">"""float: sigma (S), electrical conductivity of copper.</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">CONDUCTIVITY_AL</span> = 3.5e7
+<span style="color: #8b2252;">"""float: sigma (S), electrical conductivity of stainless steel.</span>
+
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">R_W</span> = 0.0005
+<span style="color: #8b2252;">"""float: r_w, (m), initial wire radius."""</span>
+
+<span style="color: #a0522d;">N_WIRE_SEGMENTS</span> = 30
+<span style="color: #8b2252;">"""int: n_wire_segments, (), number of segments per NEC wire."""</span>
+
+<span style="color: #a0522d;">Z0</span> = 50
+<span style="color: #8b2252;">"""float: Z_0 (Ohms), feedline characteristic impedance."""</span>
+
+<span style="color: #a0522d;">OPENSCAD_SV_FA</span> = 5.0
+<span style="color: #8b2252;">"""float: OPENSCAD_SV_FA , special variable $fa used in openscad rendering.</span>
+<span style="color: #8b2252;">          Minimum fragment angle."""</span>
+
+<span style="color: #a0522d;">OPENSCAD_SV_FS</span> = 0.5
+<span style="color: #8b2252;">"""float: OPENSCAD_SV_FS , special variable $fs used in openscad rendering.</span>
+<span style="color: #8b2252;">          Minimum fragment length. """</span>
+
+<span style="color: #a0522d;">OPENSCAD_SV_FN</span> = 48
+<span style="color: #8b2252;">"""float: OPENSCAD_SV_FN , special variable $fn used in openscad rendering.</span>
+<span style="color: #8b2252;">          Number of fragments (override)."""</span>
+
+<span style="color: #a0522d;">SIGMA_L</span> = 0.01
+<span style="color: #8b2252;">"""float: SIGMA_L , construction uncertainty for wire lengths."""</span>
+
+<span style="color: #a0522d;">DEBUG_LOG</span> = <span style="color: #008b8b;">True</span>
+<span style="color: #8b2252;">"""bool: DEBUG_LOG , switch on verbose logging."""</span>
+
+</pre>
+</div>
+
+<p>
+Some global variables used to track the optimisation path
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python" id="org6bf38b9"><span style="color: #a0522d;">z_path</span> = np.ndarray(shape=(1,0), dtype=<span style="color: #483d8b;">complex</span>)
+<span style="color: #a0522d;">gamma_path</span> = np.ndarray(shape=(1,0), dtype=<span style="color: #483d8b;">float</span>)
+</pre>
+</div>
+
+<p>
+This function simply computes \(\Gamma\), the reflection coefficient for a particular antenna scenario given characteristic impedance of the transmission line.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python" id="orga793277"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">reflection_coefficient</span>(z, z0):
+    <span style="color: #a020f0;">return</span> np.<span style="color: #483d8b;">abs</span>((z - z0) / (z + z0))
+
+<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">vswr</span>(z, z0):
+    <span style="color: #a0522d;">Gamma</span> = reflection_coefficient(z, z0)
+    <span style="color: #a020f0;">return</span> <span style="color: #483d8b;">float</span>((1 + Gamma) / (1 - Gamma))
+
+<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">mismatch</span>(z, z0):
+    <span style="color: #a0522d;">Gamma</span> = reflection_coefficient(z, z0)
+    <span style="color: #a020f0;">return</span> 1 - Gamma**2
+</pre>
+</div>
+
+<p>
+The following function generates the antenna and feed geometry for a generalised QFA:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python" id="org3a9cfa2"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">qfh_geometry</span>(base, r_w, n_helix, d_helix, s_helix, 
+                 n_filaments,
+                 n_segments,   <span style="color: #b22222;"># </span><span style="color: #b22222;">number of segments per turn</span>
+                 construct_nec_context=<span style="color: #008b8b;">True</span>,
+                 construct_solid_geom=<span style="color: #008b8b;">False</span>):
+
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">derived quantities</span>
+    <span style="color: #a0522d;">c_helix</span> = np.pi * d_helix
+    <span style="color: #a0522d;">l</span> = n_helix * s_helix
+    <span style="color: #a0522d;">l_0</span> = np.sqrt(s_helix ** 2 + c_helix ** 2)
+    <span style="color: #a0522d;">l_n</span> = n_helix * l_0
+    <span style="color: #a0522d;">l_seg</span> = l_0 / n_segments
+    <span style="color: #a0522d;">alpha</span> = np.arctan(s_helix / (np.pi * d_helix))
+    <span style="color: #a0522d;">theta_seg</span> = 2 * np.pi / n_segments
+
+    <span style="color: #a020f0;">if</span> DEBUG_LOG:
+        <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"qfh_geometry() called with \n"</span>       \
+              <span style="color: #8b2252;">"base        = [ {} ]\n"</span>            \
+              <span style="color: #8b2252;">"r_w         = [ {} ]\n"</span>            \
+              <span style="color: #8b2252;">"n_helix     = [ {} ]\n"</span>            \
+              <span style="color: #8b2252;">"d_helix     = [ {} ]\n"</span>            \
+              <span style="color: #8b2252;">"s_helix     = [ {} ]\n"</span>            \
+              <span style="color: #8b2252;">"n_filaments = [ {} ]\n"</span>            \
+              <span style="color: #8b2252;">"n_segmemts  = [ {} ]\n"</span>            \
+              <span style="color: #8b2252;">"c_helix     = [ {} ]\n"</span>            \
+              <span style="color: #8b2252;">"l           = [ {} ]\n"</span>            \
+              <span style="color: #8b2252;">"l_0         = [ {} ]\n"</span>            \
+              <span style="color: #8b2252;">"l_n         = [ {} ]\n"</span>            \
+              <span style="color: #8b2252;">"l_seg       = [ {} ]\n"</span>            \
+              <span style="color: #8b2252;">"alpha       = [ {} ]\n"</span>            \
+              <span style="color: #8b2252;">"theta_seg   = [ {} ]\n"</span>            \
+              .<span style="color: #483d8b;">format</span>(base, r_w, n_helix, d_helix, s_helix,
+                      n_filaments, n_segments,
+                      c_helix, l, l_0, l_n, l_seg, alpha,
+                      theta_seg))
+
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">in case we are constructing neither</span>
+    <span style="color: #a0522d;">context</span> = <span style="color: #008b8b;">None</span>
+    <span style="color: #a0522d;">solid_geom</span> = <span style="color: #008b8b;">None</span>
+    <span style="color: #a0522d;">curr_tag</span> = 1
+    <span style="color: #a0522d;">feed_tags</span> = n_filaments * [<span style="color: #008b8b;">None</span>]
+
+    <span style="color: #a020f0;">if</span> construct_nec_context:
+        <span style="color: #b22222;">#</span><span style="color: #b22222;">creation of a nec context</span>
+        <span style="color: #a0522d;">context</span> = nec_context()
+
+        context.set_extended_thin_wire_kernel(<span style="color: #008b8b;">True</span>)
+        <span style="color: #b22222;">#</span><span style="color: #b22222;">get the associated geometry</span>
+        <span style="color: #a0522d;">geo</span> = context.get_geometry()
+
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">ensure that we meet validity criterion for</span>
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">thin wire aproximation (non-extended thin wire kernel)</span>
+    <span style="color: #a020f0;">assert</span> (l_0 / n_segments / r_w) &gt; 8
+
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">TODO: add a feed of some sort...</span>
+    <span style="color: #a020f0;">if</span> DEBUG_LOG:
+        <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"Add wire {} {} {} "</span>.<span style="color: #483d8b;">format</span>(base, base + 0.1,
+                                          r_w))
+
+    <span style="color: #a020f0;">if</span> construct_nec_context:
+        geo.wire(curr_tag, N_WIRE_SEGMENTS,
+                 0.0, 0.0, base,
+                 0.0, 0.0, base + 0.1,
+                 r_w, 1.0, 1.0)
+        <span style="color: #a0522d;">curr_tag</span> += 1
+    <span style="color: #a020f0;">if</span> construct_solid_geom:
+        <span style="color: #a0522d;">solid_geom</span> = sp.translate([0, 0, (0.1/2 + base) * 1e3])(
+            sp.cylinder(r=0.05 * 1e3, h=0.1 * 1e3, center=<span style="color: #008b8b;">True</span>))
+
+    <span style="color: #a0522d;">theta_filament_deg</span> = 360.0 / n_filaments
+    <span style="color: #a0522d;">theta_filament_rad</span> = np.deg2rad(theta_filament_deg)
+
+    <span style="color: #a020f0;">if</span> DEBUG_LOG:
+        <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"theta_filament_deg = {} theta_filament_rad = {} "</span>
+              .<span style="color: #483d8b;">format</span>(theta_filament_deg, theta_filament_rad))
+
+    <span style="color: #a020f0;">if</span> DEBUG_LOG:
+        <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"len(range(n_segments)) = {} "</span>
+              .<span style="color: #483d8b;">format</span>(<span style="color: #483d8b;">len</span>(<span style="color: #483d8b;">range</span>(n_segments))))
+
+    <span style="color: #a020f0;">for</span> n <span style="color: #a020f0;">in</span> <span style="color: #483d8b;">range</span>(n_filaments):
+        <span style="color: #b22222;"># </span><span style="color: #b22222;">don't use the pre-canned helix as eventually we</span>
+        <span style="color: #b22222;"># </span><span style="color: #b22222;">would like to perturb individual wire segments</span>
+        <span style="color: #b22222;"># </span><span style="color: #b22222;">as part of a monte-carlo simulation to investigate</span>
+        <span style="color: #b22222;"># </span><span style="color: #b22222;">sensitivities to construction defects</span>
+
+        <span style="color: #b22222;"># </span><span style="color: #b22222;">also, could have exploited cylindrical symmetry</span>
+        <span style="color: #b22222;"># </span><span style="color: #b22222;">but we won't, again to have something approaching</span>
+        <span style="color: #b22222;"># </span><span style="color: #b22222;">realistic construction defects - if hand wound,</span>
+        <span style="color: #b22222;"># </span><span style="color: #b22222;">unlikely to be symmetric defects</span>
+
+        <span style="color: #a0522d;">theta_filament_offset</span> = theta_filament_rad * n
+
+        <span style="color: #a0522d;">x_0</span> = d_helix / 2.0 * np.cos(theta_filament_offset)
+        <span style="color: #a0522d;">y_0</span> = d_helix / 2.0 * np.sin(theta_filament_offset)
+        <span style="color: #a0522d;">z_0</span> = base
+        <span style="color: #a0522d;">feed_tags</span>[n] = curr_tag
+
+        <span style="color: #a020f0;">for</span> i <span style="color: #a020f0;">in</span> <span style="color: #483d8b;">range</span>(n_helix):
+            <span style="color: #a020f0;">for</span> j <span style="color: #a020f0;">in</span> <span style="color: #483d8b;">range</span>(n_segments):
+
+                <span style="color: #a0522d;">x_1</span> = d_helix / 2.0 * np.cos(theta_seg * (j + 1) + theta_filament_offset)
+                <span style="color: #a0522d;">y_1</span> = d_helix / 2.0 * np.sin(theta_seg * (j + 1) + theta_filament_offset)
+                <span style="color: #a0522d;">z_1</span> = i * s_helix + s_helix / n_segments * (j + 1) + base
+
+                <span style="color: #a020f0;">if</span> DEBUG_LOG:
+                    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"Add wire {} {} {} -&gt; {} {} {} "</span>
+                          .<span style="color: #483d8b;">format</span>(x_0, y_0, z_0,
+                                  x_1, y_1, z_1))
+
+                <span style="color: #a020f0;">if</span> construct_nec_context:
+                    geo.wire(curr_tag, N_WIRE_SEGMENTS,
+                             x_0, y_0, z_0,
+                             x_1, y_1, z_1,
+                             r_w, 1.0, 1.0)
+                    <span style="color: #a0522d;">curr_tag</span> += 1
+
+
+                <span style="color: #a020f0;">if</span> construct_solid_geom:
+
+                    <span style="color: #a0522d;">solid_geom</span> += sp.translate([x_0 * 1e3, y_0 * 1e3, z_0 * 1e3])(
+                        sp.rotate([0, np.rad2deg(np.pi / 2.0 - alpha), np.rad2deg(np.pi / 2.0 + theta_seg * (j + 0.5) + theta_filament_offset)])(
+                            sp.cylinder(r=r_w * 1e3, h=l_seg * 1e3, center=<span style="color: #008b8b;">False</span>)))
+
+                <span style="color: #a0522d;">x_0</span> = x_1
+                <span style="color: #a0522d;">y_0</span> = y_1
+                <span style="color: #a0522d;">z_0</span> = z_1
+
+    <span style="color: #a020f0;">if</span> construct_nec_context:
+        <span style="color: #b22222;"># </span><span style="color: #b22222;">Group I cards</span>
+        context.ld_card(5, 0, 0, 0, CONDUCTIVITY_AL, 0.0, 0.0)
+        <span style="color: #b22222;"># </span><span style="color: #b22222;">Don't specify a ground for this one</span>
+        context.gn_card(0, 0, GROUND_DIELECTRIC, GROUND_CONDUCTIVITY,
+                        0, 0, 0, 0)
+        context.geometry_complete(0)
+
+    <span style="color: #a020f0;">return</span> context, solid_geom, feed_tags
+</pre>
+</div>
+
+
+
+<div class="org-src-container">
+<pre class="src src-python" id="org80d80ec"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">set_frequencies_linear</span>(context, start_frequency, stop_frequency,
+                           count=<span style="color: #008b8b;">None</span>, step_size=<span style="color: #008b8b;">None</span>):
+    <span style="color: #8b2252;">""" If start_frequency does not equal stop_frequency, either count or </span>
+<span style="color: #8b2252;">      step should be specified. The other parameter will be automatically deduced """</span>
+
+    <span style="color: #a020f0;">if</span> start_frequency == stop_frequency:
+        <span style="color: #a0522d;">step_size</span> = 0
+        <span style="color: #a0522d;">count</span> = 1
+    <span style="color: #a020f0;">else</span>:
+        <span style="color: #b22222;"># </span><span style="color: #b22222;">TODO: add some asserts</span>
+        <span style="color: #a020f0;">if</span> count <span style="color: #a020f0;">is</span> <span style="color: #a020f0;">not</span> <span style="color: #008b8b;">None</span>:
+            <span style="color: #a0522d;">step_size</span> = (stop_frequency - start_frequency) / count
+        <span style="color: #a020f0;">else</span>:
+            <span style="color: #a0522d;">count</span> = (stop_frequency - start_frequency) / step_size
+
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">TODO, what if we don't have nice divisibility here</span>
+    <span style="color: #a0522d;">count</span> = <span style="color: #483d8b;">int</span>(count)
+
+    <span style="color: #a0522d;">ifrq_linear_step</span> = 0
+
+    context.fr_card(ifrq_linear_step, count, start_frequency, step_size)
+    <span style="color: #a020f0;">if</span> DEBUG_LOG:
+        <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"Added fr_card({}, {}, {}, {}) "</span>
+              .<span style="color: #483d8b;">format</span>(ifrq_linear_step, count, start_frequency, step_size))
+
+
+
+<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">set_frequency</span>(context, frequency):
+    set_frequencies_linear(context, frequency, frequency)
+
+<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">set_excitation</span>(context, feed_tags):
+
+    <span style="color: #a020f0;">for</span> i <span style="color: #a020f0;">in</span> <span style="color: #483d8b;">range</span>(<span style="color: #483d8b;">len</span>(feed_tags)):
+        <span style="color: #b22222;"># </span><span style="color: #b22222;">Group II cards</span>
+        <span style="color: #b22222;">#</span><span style="color: #b22222;">add a "ex" card to specify an excitation</span>
+        context.ex_card(0, feed_tags[i], 1, 0, 0,
+                        np.cos(2.0 * np.pi / <span style="color: #483d8b;">len</span>(feed_tags) * i),
+                        -np.sin(2.0 * np.pi / <span style="color: #483d8b;">len</span>(feed_tags) * i),
+                        0.0, 0.0, 0.0, 0.0)
+        <span style="color: #a020f0;">if</span> DEBUG_LOG:
+            <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"Added excitation tag =  {} "</span>.<span style="color: #483d8b;">format</span>(feed_tags[i]))
+
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-python" id="org78f03e1"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">compute_impedance</span>(context, frequency, feed_tags):
+
+      set_frequency(context, frequency)
+      set_excitation(context, feed_tags)
+      <span style="color: #b22222;"># </span><span style="color: #b22222;">Group III cards</span>
+      context.xq_card(0)
+
+      <span style="color: #b22222;">#</span><span style="color: #b22222;">get the input_parameters</span>
+      <span style="color: #a0522d;">ip</span> = context.get_input_parameters(0)
+      <span style="color: #a0522d;">z</span> = ip.get_impedance()[0]
+
+      <span style="color: #a020f0;">return</span> z
+</pre>
+</div>
+
+
+<p>
+To be determined.  A suitable cost function for optimising our QFA.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python" id="org9d2639d"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">cost_function</span>(x):
+
+    <span style="color: #a0522d;">radial_len</span> = x[2]
+    <span style="color: #a0522d;">radial_offset</span> = 0.0
+    <span style="color: #a0522d;">n_radials</span> = 4
+    <span style="color: #a0522d;">theta_radial</span> = x[3]
+    <span style="color: #a020f0;">if</span> theta_radial &gt; 80.0 <span style="color: #a020f0;">or</span> theta_radial &lt; 0.0:
+        <span style="color: #a020f0;">return</span> <span style="color: #483d8b;">float</span>(<span style="color: #8b2252;">'inf'</span>)
+
+    <span style="color: #a0522d;">length</span> = x[0]   <span style="color: #b22222;"># </span><span style="color: #b22222;">length &gt;= 0</span>
+    <span style="color: #a0522d;">base</span> = x[1]     <span style="color: #b22222;"># </span><span style="color: #b22222;">base &gt;= 0</span>
+    <span style="color: #a020f0;">if</span> base &lt; 0 <span style="color: #a020f0;">or</span> length &lt;= 0.1 <span style="color: #a020f0;">or</span> radial_len &lt;= 0.1:
+        <span style="color: #a020f0;">return</span> <span style="color: #483d8b;">float</span>(<span style="color: #8b2252;">'inf'</span>)
+
+    <span style="color: #a0522d;">context</span>, <span style="color: #a0522d;">solid_geom</span>, <span style="color: #a0522d;">feed_tags</span> = qfh_geometry(base, R_W, N, D, S,
+                                                  N_FILAMENTS, N_SEGMENTS,
+                                                  construct_nec_context=<span style="color: #008b8b;">True</span>,
+                                                  construct_solid_geom=<span style="color: #008b8b;">False</span>)
+
+    <span style="color: #a0522d;">z</span> = compute_impedance(context, FREQ, feed_tags)
+    <span style="color: #a0522d;">gamma</span> = reflection_coefficient(z, Z0)
+
+    <span style="color: #a020f0;">global</span> z_path, gamma_path
+    <span style="color: #a0522d;">z_path</span> = np.append(z_path, z)
+    <span style="color: #a0522d;">gamma_path</span> = np.append(gamma_path, gamma)
+
+    <span style="color: #a020f0;">return</span> vswr(z, Z0)
+</pre>
+</div>
+
+
+
+<div class="org-src-container">
+<pre class="src src-python" id="org8c9eb59"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">optimise_antenna</span>():
+
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Starting value </span>
+    <span style="color: #a0522d;">freq</span> = FREQ
+    <span style="color: #a0522d;">bounds</span> = [(np.log(0.4), np.log(0.7)),
+              (np.log(0.01), np.log(0.02)),
+              (np.log(0.4), np.log(0.7)),
+              (np.log(15.0), np.log(85.0))]
+
+    <span style="color: #a0522d;">initial_radial_len</span> = 0.6
+    <span style="color: #a0522d;">initial_theta_radial</span> = 22.0
+    <span style="color: #a0522d;">initial_length</span> = 0.6
+    <span style="color: #a0522d;">initial_base</span> = 0.01
+
+    <span style="color: #a0522d;">initial_geom</span> = np.array([initial_length, initial_base, \
+                             initial_radial_len, initial_theta_radial])
+
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Carry out the minimization</span>
+    <span style="color: #a0522d;">result</span> = scipy.optimize.minimize(cost_function, initial_geom, \
+                                     method=<span style="color: #8b2252;">'Nelder-Mead'</span>)
+
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'z_path min={} max={}'</span>.<span style="color: #483d8b;">format</span>(np.amin(z_path),
+                                        np.amax(z_path)))
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'gamma_path min={} max={}'</span>.<span style="color: #483d8b;">format</span>(np.amin(gamma_path),
+                                            np.amax(gamma_path)))
+
+    <span style="color: #a0522d;">length</span> = result.x[0]
+    <span style="color: #a0522d;">base</span> = result.x[1]
+
+    <span style="color: #a0522d;">radial_len</span> = result.x[2]
+    <span style="color: #a0522d;">radial_offset</span> = 0.0
+    <span style="color: #a0522d;">n_radials</span> = 4
+    <span style="color: #a0522d;">theta_radial</span> = result.x[3]
+
+    <span style="color: #a020f0;">return</span> base, length, R_W, radial_len, \
+        radial_offset, n_radials, theta_radial
+</pre>
+</div>
+
+<p>
+The geometry yielding these simulated parameters is shown in figure <a href="#qfh_geom">qfh_geom</a> .  It has a driven element length of \(l_d = 0.701\)m and radials of length \(l_r = 0.348 \)m that make angle \(\theta _r = 46.86^{\circ} \) with the xy-plane.
+</p>
+
+<figure>
+  <img src="{{ site.url }}/assets/qfh_geom.png" alt="Antenna geometry" width="75%">	
+  <figcaption>Antenna geometry</figcaption>
+</figure>
+
+
+<div id="orgbed7b50" class="figure">
+<p><img src="../images/qfh_geom.png" alt="qfh_geom.png" />
+</p>
+<p><span class="figure-number">Figure 1: </span>Optimised antenna geometry</p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-org40ffcc3" class="outline-2">
+<h2 id="org40ffcc3"><span class="section-number-2">3</span> Compute the radiation pattern for the optimised antenna and plot</h2>
+<div class="outline-text-2" id="text-3">
+<div class="org-src-container">
+<pre class="src src-python" id="orgfde36c6"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">plot_radiation_pattern</span>(context, label):
+
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Group III cards</span>
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">add a "rp" card to specify radiation pattern sampling parameters </span>
+    context.rp_card(calc_mode=0, n_theta=180, n_phi=720, output_format=0,
+                    normalization=0, D=0, A=0,
+                    theta0=0.0, delta_theta=0.5, phi0=0.0, delta_phi=0.5,
+                    radial_distance=0.0, gain_norm=0.0)
+
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">and to cause program execution</span>
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">- submitting a new fr_card doesn't seem to cause</span>
+    <span style="color: #b22222;">#   </span><span style="color: #b22222;">a simulation re-execution upon calling rp_card()</span>
+    context.xq_card(0)
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">get the radiation_pattern</span>
+    <span style="color: #a0522d;">rp</span> = context.get_radiation_pattern(0)
+
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Gains are in decibels</span>
+    <span style="color: #a0522d;">gains_db</span> = rp.get_gain()
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'gains_db.shape = {0}'</span>.<span style="color: #483d8b;">format</span>(gains_db.shape))
+
+    <span style="color: #a0522d;">gains</span> = 10.0**(gains_db / 10.0)
+    <span style="color: #a0522d;">thetas</span> = rp.get_theta_angles() * 3.1415 / 180.0
+    <span style="color: #a0522d;">phis</span> = rp.get_phi_angles() * 3.1415 / 180.0
+
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'thetas.shape = {0} [{1},{2}]'</span>
+          .<span style="color: #483d8b;">format</span>(thetas.shape, thetas[0], thetas[<span style="color: #483d8b;">len</span>(thetas)-1]))
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'phis.shape = {0} [{1},{2}]'</span>
+          .<span style="color: #483d8b;">format</span>(phis.shape, phis[0], phis[<span style="color: #483d8b;">len</span>(phis)-1]))
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'gains \in [{0},{1}]'</span>.<span style="color: #483d8b;">format</span>(np.amin(gains), np.amax(gains)))
+    <span style="color: #a0522d;">fig</span> = plt.figure()
+
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Plot 2d polar plots</span>
+    <span style="color: #a0522d;">ax</span> = fig.add_subplot(2, 2, 1, projection=<span style="color: #8b2252;">'polar'</span>)
+    ax.plot(phis, gains[180//4 - 1,:], color=<span style="color: #8b2252;">'r'</span>, linewidth=3)
+    ax.grid(<span style="color: #008b8b;">True</span>)
+    ax.set_rmax(1.0)
+    ax.set_title(<span style="color: #8b2252;">"Gain at an elevation of 22.5 degrees"</span>, va=<span style="color: #8b2252;">'bottom'</span>)
+
+    <span style="color: #a0522d;">ax</span> = fig.add_subplot(2, 2, 2, projection=<span style="color: #8b2252;">'polar'</span>)
+    ax.plot(np.concatenate((thetas, np.pi - thetas)),
+            np.concatenate((gains[:,0], gains[:,360])),
+            color=<span style="color: #8b2252;">'r'</span>, linewidth=3)
+    ax.grid(<span style="color: #008b8b;">True</span>)
+    ax.set_rmax(1.5)
+    ax.set_thetalim(thetamin=0.0, thetamax=180.0)
+    ax.set_thetagrids([0.0, 30.0, 60.0, 90.0, 120.0, 150.0, 180.0])
+    ax.set_title(<span style="color: #8b2252;">"Gain sliced through xz-plane"</span>, va=<span style="color: #8b2252;">'bottom'</span>)
+
+    <span style="color: #a0522d;">ax</span> = fig.add_subplot(2, 2, 3, projection=<span style="color: #8b2252;">'polar'</span>)
+    ax.plot(phis, gains[180//2 - 1,:], color=<span style="color: #8b2252;">'r'</span>, linewidth=3)
+    ax.grid(<span style="color: #008b8b;">True</span>)
+    ax.set_rmax(1.0)
+    ax.set_title(<span style="color: #8b2252;">"Gain at an elevation of 45 degrees"</span>, va=<span style="color: #8b2252;">'bottom'</span>)
+
+    <span style="color: #a0522d;">ax</span> = fig.add_subplot(2, 2, 4, projection=<span style="color: #8b2252;">'polar'</span>)
+    ax.plot(np.concatenate((thetas, np.pi - thetas)),
+            np.concatenate((gains[:,180], gains[:,540])),
+            color=<span style="color: #8b2252;">'r'</span>, linewidth=3)
+    ax.grid(<span style="color: #008b8b;">True</span>)
+    ax.set_rmax(1.5)
+    ax.set_thetalim(thetamin=0.0, thetamax=180.0)
+    ax.set_thetagrids([0.0, 30.0, 60.0, 90.0, 120.0, 150.0, 180.0])
+    ax.set_title(<span style="color: #8b2252;">"Gain sliced through yz-plane"</span>, va=<span style="color: #8b2252;">'bottom'</span>)
+
+    plt.savefig(<span style="color: #8b2252;">'../images/qfh_polar_plots_{}.png'</span>.<span style="color: #483d8b;">format</span>(label))
+    plt.gcf().clear()
+
+
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Plot 3d radiation pattern.</span>
+    <span style="color: #a0522d;">R</span> = gains.T
+    <span style="color: #a0522d;">THETA</span>, <span style="color: #a0522d;">PHI</span> = np.meshgrid(thetas, phis)
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'THETA.shape = {0}'</span>.<span style="color: #483d8b;">format</span>(THETA.shape))
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'PHI.shape = {0}'</span>.<span style="color: #483d8b;">format</span>(PHI.shape))
+    <span style="color: #a0522d;">X</span> = R * np.sin(THETA) * np.cos(PHI)
+    <span style="color: #a0522d;">Y</span> = R * np.sin(THETA) * np.sin(PHI)
+    <span style="color: #a0522d;">Z</span> = R * np.cos(THETA)
+    <span style="color: #a0522d;">ax</span> = fig.add_subplot(1, 1, 1, projection=<span style="color: #8b2252;">'3d'</span>)
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Plot the surface.</span>
+    ax.plot_surface(X, Y, Z, rstride=1, cstride=1, 
+                    cmap=plt.get_cmap(<span style="color: #8b2252;">'jet'</span>), linewidth=0,
+                    antialiased=<span style="color: #008b8b;">False</span>, alpha=0.5)
+    ax.grid(<span style="color: #008b8b;">True</span>)
+
+    ax.set_title(<span style="color: #8b2252;">"3d gain plot"</span>, va=<span style="color: #8b2252;">'bottom'</span>)
+    plt.savefig(<span style="color: #8b2252;">'../images/qfh_3d_gain_plot_{}.png'</span>.<span style="color: #483d8b;">format</span>(label))
+<span style="color: #b22222;">#    </span><span style="color: #b22222;">plt.show()</span>
+    plt.gcf().clear()
+    plt.close(fig)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org84f7ed6" class="outline-2">
+<h2 id="org84f7ed6"><span class="section-number-2">4</span> Comparison of normal mode, axial mode and higher-order mode excitation radiation patterns</h2>
+<div class="outline-text-2" id="text-4">
+<div class="org-src-container">
+<pre class="src src-python" id="org0055a8e"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">compare_excitation_modes</span>():
+
+    <span style="color: #a0522d;">base</span> = BASE
+
+    <span style="color: #a0522d;">modes</span> = [ <span style="color: #8b2252;">'normal'</span>, <span style="color: #8b2252;">'axial'</span>, <span style="color: #8b2252;">'higher-order'</span> ]
+    <span style="color: #a0522d;">freqs</span> = [ 0.1, 137.0, 1370.0 ]
+
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">begin with the degenerate case of a single filament</span>
+    <span style="color: #a0522d;">n_filaments</span> = 1
+
+    <span style="color: #a0522d;">context</span>, <span style="color: #a0522d;">solid_geom</span>, <span style="color: #a0522d;">feed_tags</span> = qfh_geometry(BASE, R_W, N, D, S,
+                                                  n_filaments, N_SEGMENTS,
+                                                  construct_nec_context=<span style="color: #008b8b;">True</span>,
+                                                  construct_solid_geom=<span style="color: #008b8b;">True</span>)
+    set_excitation(context, feed_tags)
+
+    <span style="color: #a020f0;">for</span> i <span style="color: #a020f0;">in</span> <span style="color: #483d8b;">range</span>(<span style="color: #483d8b;">len</span>(modes)):
+        set_frequency(context, freqs[2])
+        plot_radiation_pattern(context, modes[2])
+
+    <span style="color: #a020f0;">return</span> 0
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-sh" id="orgaeb102c">python qfh_antenna.py 2&gt;&amp;1
+true
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgd72d989" class="outline-3">
+<h3 id="orgd72d989"><span class="section-number-3">4.1</span> Normal mode</h3>
+<div class="outline-text-3" id="text-4-1">
+<figure>
+  <img src="{{ site.url }}/assets/qfh_3d_gain_plot_normal.png" alt="3d radiation pattern plot">	
+  <figcaption>3d radiation pattern plot - normal mode excitation</figcaption>
+</figure>
+
+
+<div id="orgd461c09" class="figure">
+<p><img src="../images/qfh_3d_gain_plot_normal.png" alt="qfh_3d_gain_plot_normal.png" />
+</p>
+<p><span class="figure-number">Figure 2: </span>3d gain plot pattern - radiated normal mode excitation</p>
+</div>
+
+
+<p>
+And polar plots of gain at various elevation angles
+</p>
+
+<figure>
+  <img src="{{ site.url }}/assets/qfh_polar_plots_normal.png" alt="Radiation pattern slices">	
+  <figcaption>Radiation pattern slice at 45 degrees elevation - normal mode excitation</figcaption>
+</figure>
+
+
+<div id="orgd18e37f" class="figure">
+<p><img src="../images/qfh_polar_plots_normal.png" alt="qfh_polar_plots_normal.png" />
+</p>
+<p><span class="figure-number">Figure 3: </span>Polar plots of gain pattern for normal mode excitation at various elevation angles</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org09c5c51" class="outline-3">
+<h3 id="org09c5c51"><span class="section-number-3">4.2</span> Axial mode</h3>
+<div class="outline-text-3" id="text-4-2">
+<figure>
+  <img src="{{ site.url }}/assets/qfh_3d_gain_plot_axial.png" alt="3d radiation pattern plot">	
+  <figcaption>3d radiation pattern plot - axial mode excitation</figcaption>
+</figure>
+
+
+<div id="orgfc9c5f7" class="figure">
+<p><img src="../images/qfh_3d_gain_plot_axial.png" alt="qfh_3d_gain_plot_axial.png" />
+</p>
+<p><span class="figure-number">Figure 4: </span>3d gain plot pattern - radiated axial mode excitation</p>
+</div>
+
+
+<p>
+And polar plots of gain at various elevation angles
+</p>
+
+<figure>
+  <img src="{{ site.url }}/assets/qfh_polar_plots_axial.png" alt="Radiation pattern slices">	
+  <figcaption>Radiation pattern slice at 45 degrees elevation - axial mode excitation</figcaption>
+</figure>
+
+
+<div id="orga8cd5cd" class="figure">
+<p><img src="../images/qfh_polar_plots_axial.png" alt="qfh_polar_plots_axial.png" />
+</p>
+<p><span class="figure-number">Figure 5: </span>Polar plots of gain pattern for axial mode excitation at various elevation angles</p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-orgb78a371" class="outline-3">
+<h3 id="orgb78a371"><span class="section-number-3">4.3</span> Higher-order mode</h3>
+<div class="outline-text-3" id="text-4-3">
+<figure>
+  <img src="{{ site.url }}/assets/qfh_3d_gain_plot_higher-order.png" alt="3d radiation pattern plot">	
+  <figcaption>3d radiation pattern plot - higher-mode mode excitation</figcaption>
+</figure>
+
+
+<div id="org5e3ce5d" class="figure">
+<p><img src="../images/qfh_3d_gain_plot_higher-order.png" alt="qfh_3d_gain_plot_higher-order.png" />
+</p>
+<p><span class="figure-number">Figure 6: </span>3d gain plot pattern - radiated higher-order mode excitation</p>
+</div>
+
+
+<p>
+And polar plots of gain at various elevation angles
+</p>
+
+<figure>
+  <img src="{{ site.url }}/assets/qfh_polar_plots_higher-order.png" alt="Radiation pattern slices">	
+  <figcaption>Radiation pattern slice at 45 degrees elevation - higher mode excitation</figcaption>
+</figure>
+
+
+<div id="orgd040413" class="figure">
+<p><img src="../images/qfh_polar_plots_higher-order.png" alt="qfh_polar_plots_higher-order.png" />
+</p>
+<p><span class="figure-number">Figure 7: </span>Polar plots of gain pattern for higher-order mode excitation at various elevation angles</p>
+</div>
+</div>
+</div>
+</div>
+
+
+
+<div id="outline-container-org134315f" class="outline-2">
+<h2 id="org134315f"><span class="section-number-2">5</span> VSWR as a function of frequency</h2>
+<div class="outline-text-2" id="text-5">
+<p>
+For our optimised antenna, how does the effective match to a \(50 \Omega \) load vary with frequency?
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python" id="org76d438a"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">compute_vswr</span>(context, feed_tags):
+
+    <span style="color: #a0522d;">count</span> = 50
+    set_frequencies_linear(context, FREQ - BANDWIDTH/2.0,
+                           FREQ + BANDWIDTH/2.0, count=count)
+    set_excitation(context, feed_tags)
+    context.xq_card(0) <span style="color: #b22222;"># </span><span style="color: #b22222;">Execute simulation</span>
+
+    <span style="color: #a0522d;">freqs</span> = []
+    <span style="color: #a0522d;">vswrs</span> = []
+    <span style="color: #a020f0;">for</span> idx <span style="color: #a020f0;">in</span> <span style="color: #483d8b;">range</span>(0, count):
+        <span style="color: #a0522d;">ipt</span> = context.get_input_parameters(idx)
+        <span style="color: #a0522d;">z</span> = ipt.get_impedance()
+
+        freqs.append(ipt.get_frequency() / 1000000)
+        vswrs.append(vswr(z, Z0))
+
+    <span style="color: #a020f0;">return</span> freqs, vswrs
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-python" id="orgdae3ff6"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">plot_vswr</span>(freqs, vswrs):
+
+    <span style="color: #a0522d;">fig</span> = plt.figure()
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Plot cartesian, linear scale</span>
+    <span style="color: #a0522d;">ax</span> = fig.add_subplot(1, 1, 1, projection=<span style="color: #8b2252;">'rectilinear'</span>)
+    ax.plot(freqs, vswrs, color=<span style="color: #8b2252;">'r'</span>, linewidth=3)
+    ax.grid(<span style="color: #008b8b;">True</span>)
+    ax.set_xlabel(<span style="color: #8b2252;">"Frequency (MHz)"</span>)
+    ax.set_ylabel(<span style="color: #8b2252;">"VSWR"</span>)
+    ax.set_title(<span style="color: #8b2252;">"VSWR vs. frequency (MHz) for 50 ohm system"</span>, va=<span style="color: #8b2252;">'bottom'</span>)
+
+    plt.savefig(<span style="color: #8b2252;">'../images/qfh_vswr.png'</span>)
+    plt.gcf().clear()
+</pre>
+</div>
+
+<p>
+The plot in figure <a href="#qfh_vswr">qfh_vswr</a> shows the response of the optimised antenna across the Airband.
+</p>
+
+<figure>
+  <img src="{{ site.url }}/assets/qfh_vswr.png" alt="VSWR for 50 ohm system" width="75%">	
+  <figcaption>VSWR for 50 ohm system</figcaption>
+</figure>
+
+
+<div id="org6c46c51" class="figure">
+<p><img src="../images/qfh_vswr.png" alt="qfh_vswr.png" />
+</p>
+<p><span class="figure-number">Figure 8: </span>VSWR for 50 ohm system</p>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-orgdeefd52" class="outline-2">
+<h2 id="orgdeefd52"><span class="section-number-2">6</span> Performance sensitivity to realised length</h2>
+<div class="outline-text-2" id="text-6">
+<p>
+For a real-world antenna with construction defects, what is the effect on antenna impedance of the driven element and radials having lengths that deviate from the ideal computed value?  We attempt to compute the partial derivative of \(Z\) with respect to \(l_d\) by taking finite differences around the optimised value of \(l_d\) and estimate our construction tolerance \(\sigma l = 0.01\).  For some small \(h\) we have
+</p>
+
+\begin{equation}
+\frac{\partial Z}{\partial l_d} \approx \frac{Z(l_d + h) - Z(l_d - h)}{2h}
+\end{equation}
+
+
+<div class="org-src-container">
+<pre class="src src-python" id="org674eb8a"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">compute_dz_dl_e</span>(base, length, r_w, radial_len,
+                    radial_offset, n_radials, theta_radial,
+                    h):
+
+    <span style="color: #a0522d;">z_n</span> = []
+    <span style="color: #a020f0;">for</span> k <span style="color: #a020f0;">in</span> <span style="color: #483d8b;">range</span>(2):
+
+        <span style="color: #a0522d;">context</span>, <span style="color: #a0522d;">solid_geom</span> = qfh_geometry(base, R_W, N, D, S + ((-1) ** (k + 1) * h),
+                                           N_FILAMENTS, N_SEGMENTS,
+                                           construct_nec_context=<span style="color: #008b8b;">True</span>,
+                                           construct_solid_geom=<span style="color: #008b8b;">False</span>)
+
+
+
+        set_frequency(context, FREQ)
+        set_excitation(context)
+        context.xq_card(0) <span style="color: #b22222;"># </span><span style="color: #b22222;">Execute simulation</span>
+
+        <span style="color: #a0522d;">ip</span> = context.get_input_parameters(0)
+        <span style="color: #a0522d;">z</span> = ip.get_impedance()
+
+        z_n.append(z)
+        <span style="color: #a020f0;">print</span>(z)
+
+    <span style="color: #a0522d;">partial_z_l_e</span> = (z_n[0] - z_n[1]) / (2 * h)
+
+    <span style="color: #a020f0;">return</span> partial_z_l_e
+</pre>
+</div>
+</div>
+</div>
+
+
+
+<div id="outline-container-org70f0699" class="outline-2">
+<h2 id="org70f0699"><span class="section-number-2">7</span> Performance sensitivity to realised length</h2>
+</div>
+
+
+<div id="outline-container-org7382daa" class="outline-2">
+<h2 id="org7382daa"><span class="section-number-2">8</span> Compute antenna performance sensitivity (bandwith) to wire thickness</h2>
+</div>
+
+<div id="outline-container-org50769a0" class="outline-2">
+<h2 id="org50769a0"><span class="section-number-2">9</span> Compute a suitable bandpass impedance matching network</h2>
+<div class="outline-text-2" id="text-9">
+<div class="org-src-container">
+<pre class="src src-python" id="orge0df7dd"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">compute_bp_matching_network</span>(z0, zl):
+    <span style="color: #a020f0;">return</span> 0.0
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgfc5eb08" class="outline-2">
+<h2 id="orgfc5eb08"><span class="section-number-2">10</span> Investigate sensitivity to circularly polarised incident radiation</h2>
+<div class="outline-text-2" id="text-10">
+<div class="org-src-container">
+<pre class="src src-python" id="orge407079"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">main</span>():
+
+    <span style="color: #a0522d;">parser</span> = ArgumentParser(description=<span style="color: #8b2252;">"Optimise QFH antenna and compute matching network."</span>)
+    <span style="color: #a0522d;">args</span> = parser.parse_args()
+
+<span style="color: #b22222;">#    </span><span style="color: #b22222;">base, length, r_w, radial_len, \</span>
+<span style="color: #b22222;">#        </span><span style="color: #b22222;">radial_offset, n_radials, theta_radial = optimise_antenna()</span>
+
+    <span style="color: #a0522d;">base</span> = BASE
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">length = 0.63</span>
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">radial_len = 0.6</span>
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">radial_offset = 0.0</span>
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">n_radials = 4</span>
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">theta_radial = 45.0</span>
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">r_w = R_W</span>
+
+ <span style="color: #b22222;">#   </span><span style="color: #b22222;">print("\nOptimisation result\n")</span>
+ <span style="color: #b22222;">#   </span><span style="color: #b22222;">print("final geometry {} {} {} {} {} {} {}"</span>
+<span style="color: #b22222;">#          </span><span style="color: #b22222;">.format(base, length, r_w, radial_len,</span>
+<span style="color: #b22222;">#                  </span><span style="color: #b22222;">radial_offset, n_radials, theta_radial))</span>
+
+    <span style="color: #a0522d;">context</span>, <span style="color: #a0522d;">solid_geom</span>, <span style="color: #a0522d;">feed_tags</span> = qfh_geometry(BASE, R_W, N, D, S,
+                                                  N_FILAMENTS, N_SEGMENTS,
+                                                  construct_nec_context=<span style="color: #008b8b;">True</span>,
+                                                  construct_solid_geom=<span style="color: #008b8b;">True</span>)
+
+    <span style="color: #a0522d;">out_dir</span> = sys.argv[1] <span style="color: #a020f0;">if</span> <span style="color: #483d8b;">len</span>(sys.argv) &gt; 1 <span style="color: #a020f0;">else</span> os.curdir
+    <span style="color: #a0522d;">file_out</span> = os.path.join(out_dir, <span style="color: #8b2252;">'qfh_antenna.scad'</span>)
+    sp.scad_render_to_file(solid_geom, file_header=<span style="color: #8b2252;">'$fa = {}; $fs = {};'</span>
+                           .<span style="color: #483d8b;">format</span>(OPENSCAD_SV_FA, OPENSCAD_SV_FS),
+                           include_orig_code=<span style="color: #008b8b;">False</span>)
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"{}: SCAD file written to: {}\n"</span>.<span style="color: #483d8b;">format</span>(__file__, file_out))
+
+    <span style="color: #a0522d;">z</span> = compute_impedance(context, FREQ, feed_tags)
+
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"z: {0}"</span>.<span style="color: #483d8b;">format</span>(z))
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"Impedance at base={0:.2f} "</span>
+          <span style="color: #8b2252;">" : ({1:6.1f},{2:+6.1f}i) Ohms"</span>
+          .<span style="color: #483d8b;">format</span>(base, z.real, z.imag))
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"Reflection coefficient Gamma={0:0.2f}"</span>
+          .<span style="color: #483d8b;">format</span>(reflection_coefficient(z, Z0)))
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"VSWR @50 ohm ={0:0.2f}"</span>
+          .<span style="color: #483d8b;">format</span>(vswr(z, Z0)))
+
+    set_frequency(context, FREQ)
+    set_excitation(context, feed_tags)
+    plot_radiation_pattern(context)
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">compute_bp_matching_network(Z0, zl)</span>
+
+<span style="color: #b22222;">#    </span><span style="color: #b22222;">context, solid_geom, feed_tags = qfh_geometry(base, R_W, N, D, S,</span>
+<span style="color: #b22222;">#                                                  </span><span style="color: #b22222;">N_FILAMENTS, N_SEGMENTS,</span>
+<span style="color: #b22222;">#                                                  </span><span style="color: #b22222;">construct_nec_context=True,</span>
+<span style="color: #b22222;">#                                                  </span><span style="color: #b22222;">construct_solid_geom=False)</span>
+<span style="color: #b22222;">#    </span><span style="color: #b22222;">freqs, vswrs = compute_vswr(context, feed_tags)</span>
+<span style="color: #b22222;">#    </span><span style="color: #b22222;">plot_vswr(freqs, vswrs)</span>
+
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">sensitivity to driven element length</span>
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">h = 0.005</span>
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">dz_dl_e = compute_dz_dl_e(base, length, r_w, radial_len,</span>
+    <span style="color: #b22222;">#                          </span><span style="color: #b22222;">radial_offset, n_radials, theta_radial,</span>
+    <span style="color: #b22222;">#                          </span><span style="color: #b22222;">h)</span>
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">print("dl10: {0}".format(dz_dl_e * SIGMA_L))</span>
+
+    <span style="color: #a020f0;">return</span> 0
+</pre>
+</div>
+
+
+<div class="org-src-container">
+<pre class="src src-sh" id="org1349825">python qfh_antenna.py 2&gt;&amp;1
+true
+</pre>
+</div>
+
+<p>
+
+<h1 class='org-ref-bib-h1'>Bibliography</h1>
+<ul class='org-ref-bib'><li><a id="balanis1982antenna">[balanis1982antenna]</a> <a name="balanis1982antenna"></a>Balanis, Antenna theory: analysis and design, Wiley (1982).</li>
+<li><a id="kraus1950antennas">[kraus1950antennas]</a> <a name="kraus1950antennas"></a>Kraus, Antennas, McGraw-Hill (1950).</li>
+<li><a id="molteno2014necpp">[molteno2014necpp]</a> <a name="molteno2014necpp"></a>Molteno, NEC2++: An NEC-2 compatible Numerical Electromagnetics Code, University of Otago (2014).</li>
+</ul>
+</p>
+</div>
+</div>

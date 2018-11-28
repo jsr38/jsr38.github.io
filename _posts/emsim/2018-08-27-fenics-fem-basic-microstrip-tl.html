@@ -1,0 +1,82 @@
+---
+layout: page
+category : emsim
+tagline: "FEniCS for Electromagnetics Problems"
+tags : [fem, fenics, emtheory, microstrip]
+---
+<p>
+{% include JB/setup %}
+</p>
+
+
+
+<div class="org-src-container">
+<pre class="src src-python" id="org4bdbee5"><span style="color: #a020f0;">from</span> argparse <span style="color: #a020f0;">import</span> ArgumentParser
+<span style="color: #a020f0;">import</span> sys
+
+<span style="color: #a020f0;">import</span> fenics <span style="color: #a020f0;">as</span> fen
+<span style="color: #a020f0;">import</span> numpy <span style="color: #a020f0;">as</span> np
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-python" id="orgbdfd95b">
+<span style="color: #a020f0;">def</span> <span style="color: #0000ff;">main</span>():
+    <span style="color: #a0522d;">parser</span> = ArgumentParser(description=<span style="color: #8b2252;">"Download files linked to by web page."</span>)
+    parser.add_argument(<span style="color: #8b2252;">"-u"</span>, <span style="color: #8b2252;">"--url"</span>, 
+                        <span style="color: #483d8b;">type</span>=<span style="color: #483d8b;">str</span>,
+                        <span style="color: #483d8b;">help</span>=<span style="color: #8b2252;">"URL of the page"</span>)
+    parser.add_argument(<span style="color: #8b2252;">"-r"</span>, <span style="color: #8b2252;">"--regex"</span>, 
+                        <span style="color: #483d8b;">type</span>=<span style="color: #483d8b;">str</span>,
+                        <span style="color: #483d8b;">help</span>=<span style="color: #8b2252;">"Regex to match links with"</span>)
+    parser.add_argument(<span style="color: #8b2252;">"-d"</span>, <span style="color: #8b2252;">"--dest"</span>, 
+                        <span style="color: #483d8b;">type</span>=<span style="color: #483d8b;">str</span>,
+                        <span style="color: #483d8b;">help</span>=<span style="color: #8b2252;">"Destination directory"</span>)
+    <span style="color: #a0522d;">args</span> = parser.parse_args()
+
+
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Create mesh and define function space</span>
+    <span style="color: #a0522d;">mesh</span> = fen.UnitSquareMesh(8, 8)
+    <span style="color: #a0522d;">V</span> = fen.FunctionSpace(mesh, <span style="color: #8b2252;">'P'</span>, 1)
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Define boundary condition</span>
+    <span style="color: #a0522d;">u_D</span> = fen.Expression(<span style="color: #8b2252;">'1 + x[0]*x[0] + 2*x[1]*x[1]'</span>, degree=2)
+
+    <span style="color: #a020f0;">def</span> <span style="color: #0000ff;">boundary</span>(x, on_boundary):
+        <span style="color: #a020f0;">return</span> on_boundary
+
+    <span style="color: #a0522d;">bc</span> = fen.DirichletBC(V, u_D, boundary)
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Define variational problem</span>
+    <span style="color: #a0522d;">u</span> = fen.TrialFunction(V)
+    <span style="color: #a0522d;">v</span> = fen.TestFunction(V)
+    <span style="color: #a0522d;">f</span> = fen.Constant(-6.0)
+    <span style="color: #a0522d;">a</span> = fen.dot(fen.grad(u), fen.grad(v))*fen.dx
+    <span style="color: #a0522d;">L</span> = f*v*fen.dx
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Compute solution</span>
+    <span style="color: #a0522d;">u</span> = fen.Function(V)
+    fen.solve(a == L, u, bc)
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Plot solution and mesh</span>
+    fen.plot(u)
+    fen.plot(mesh)
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Save solution to file in VTK format</span>
+    <span style="color: #a0522d;">vtkfile</span> = fen.File(<span style="color: #8b2252;">'poisson/solution.pvd'</span>)
+    vtkfile &lt;&lt; u
+
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Compute error in L2 norm</span>
+    <span style="color: #a0522d;">error_L2</span> = fen.errornorm(u_D, u, <span style="color: #8b2252;">'L2'</span>)
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Compute maximum error at vertices</span>
+    <span style="color: #a0522d;">vertex_values_u_D</span> = u_D.compute_vertex_values(mesh)
+    <span style="color: #a0522d;">vertex_values_u</span> = u.compute_vertex_values(mesh)
+    <span style="color: #a0522d;">error_max</span> = np.<span style="color: #483d8b;">max</span>(np.<span style="color: #483d8b;">abs</span>(vertex_values_u_D - vertex_values_u))
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">Print errors</span>
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'error_L2 ='</span>, error_L2)
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'error_max ='</span>, error_max)
+
+    <span style="color: #a020f0;">return</span> 0
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-sh" id="org5c3964e">python fem_microstrip.py 2&gt;&amp;1
+true
+</pre>
+</div>
