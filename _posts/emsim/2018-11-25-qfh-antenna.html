@@ -155,53 +155,50 @@ The following are simulation parameters, fundamental constants and derived param
 <span style="color: #8b2252;">"""</span>
 
 <span style="color: #a0522d;">N_FILAMENTS</span> = 4
-<span style="color: #8b2252;">"""int: initial number () of filaments (quadrifilar initially)</span>
-
+<span style="color: #8b2252;">"""int: n_filaments (dimensionless), initial number of filaments </span>
+<span style="color: #8b2252;">        (quadrifilar initially)</span>
 <span style="color: #8b2252;">"""</span>
 
 <span style="color: #a0522d;">N_SEGMENTS</span> = 30
-<span style="color: #8b2252;">"""int: initial number () of wire segments per turn</span>
+<span style="color: #8b2252;">"""int: n_segments (dimensionless), initial number of wire segments per turn</span>
 
 <span style="color: #8b2252;">"""</span>
 
-<span style="color: #a0522d;">N</span> = 1
-<span style="color: #8b2252;">"""float: initial number () of (fractional) turns of the helix</span>
-
+<span style="color: #a0522d;">N_TURNS</span> = 1
+<span style="color: #8b2252;">"""float: n_turns (dimensionless), initial number of (fractional) turns</span>
+<span style="color: #8b2252;">          of the helix</span>
 <span style="color: #8b2252;">"""</span>
 
-<span style="color: #a0522d;">C</span> = LAMBDA_0
-<span style="color: #8b2252;">"""float: initial circumference (m) of a single turn of the helix,</span>
+<span style="color: #a0522d;">C_HELIX</span> = LAMBDA_0
+<span style="color: #8b2252;">"""float: c_helix (m), initial circumference of a single turn of the helix,</span>
 <span style="color: #8b2252;">          fixed by the circular polarization condition(s)</span>
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">D_HELIX</span> = C_HELIX / np.pi
+<span style="color: #8b2252;">"""float: d_helix (m), initial diameter of the helix</span>
 
 <span style="color: #8b2252;">"""</span>
 
-<span style="color: #a0522d;">D</span> = C / np.pi
-<span style="color: #8b2252;">"""float: initial diameter (m) of the helix</span>
-
-<span style="color: #8b2252;">"""</span>
-
-<span style="color: #a0522d;">S</span> = LAMBDA_0 / 4
-<span style="color: #8b2252;">"""float: spacing (m) between turns of the helix,</span>
+<span style="color: #a0522d;">S_HELIX</span> = LAMBDA_0 / 4
+<span style="color: #8b2252;">"""float: s_helix (m), spacing between turns of the helix,</span>
 <span style="color: #8b2252;">          fixed by the circular polarization condition(s)</span>
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">L</span> = N_TURNS * S_HELIX
+<span style="color: #8b2252;">"""float: l (m), total length of antenna along helix axis</span>
+<span style="color: #8b2252;">"""</span>
+
+<span style="color: #a0522d;">L_0</span> = np.sqrt(S_HELIX ** 2 + C_HELIX ** 2)
+<span style="color: #8b2252;">"""float: l_0 (m), length of wire used to form a single turn of the helix</span>
 
 <span style="color: #8b2252;">"""</span>
 
-<span style="color: #a0522d;">L</span> = N * S
-<span style="color: #8b2252;">"""float: total length (m) of antenna along helix axis</span>
-
-<span style="color: #8b2252;">"""</span>
-
-<span style="color: #a0522d;">L_0</span> = np.sqrt(S ** 2 + C ** 2)
-<span style="color: #8b2252;">"""float: length (m) of wire used to form a single turn of the helix</span>
-
-<span style="color: #8b2252;">"""</span>
-
-<span style="color: #a0522d;">L_F</span> = N * L_0
+<span style="color: #a0522d;">L_F</span> = N_TURNS * L_0
 <span style="color: #8b2252;">"""float: total length (m) of wire used to form a single filament</span>
 
 <span style="color: #8b2252;">"""</span>
 
-<span style="color: #a0522d;">ALPHA</span> = np.arctan(S / (np.pi * D))
+<span style="color: #a0522d;">ALPHA</span> = np.arctan(S_HELIX / (np.pi * D_HELIX))
 <span style="color: #8b2252;">"""float: pitch angle (radians)</span>
 
 <span style="color: #8b2252;">"""</span>
@@ -289,14 +286,36 @@ This function simply computes \(\Gamma\), the reflection coefficient for a parti
 </pre>
 </div>
 
+
+<p>
+The following is a utility function that tests whether or not a QFA geometry meets the main electrical consideration that a wire segment length, \(\Delta\), is short in comparison with the excitation wavelength(s), formally,
+</p>
+
+\begin{equation}
+\Delta < \frac{\lambda _0}{10}
+\end{equation}
+
+<div class="org-src-container">
+<pre class="src src-python" id="org5fcca8a"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">delta_criterion_met</span>(d_helix, s_helix, n_segments, n_wire_segments, frequency):
+
+    <span style="color: #a0522d;">l_segment</span> = np.sqrt(s_helix ** 2 + (np.pi * d_helix) ** 2)   \
+                / (n_segments * n_wire_segments)
+
+    <span style="color: #a020f0;">return</span> l_segment &lt; (C / frequency) / 10.0
+
+</pre>
+</div>
+
+
+
 <p>
 The following function generates the antenna and feed geometry for a generalised QFA:
 </p>
 
 <div class="org-src-container">
 <pre class="src src-python" id="org3a9cfa2"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">qfh_geometry</span>(base, r_w, n_helix, d_helix, s_helix, 
-                 n_filaments,
-                 n_segments,   <span style="color: #b22222;"># </span><span style="color: #b22222;">number of segments per turn</span>
+                 n_filaments, n_segments,   <span style="color: #b22222;"># </span><span style="color: #b22222;">number of segments per turn</span>
+                 n_wire_segments,
                  construct_nec_context=<span style="color: #008b8b;">True</span>,
                  construct_solid_geom=<span style="color: #008b8b;">False</span>):
 
@@ -311,22 +330,23 @@ The following function generates the antenna and feed geometry for a generalised
 
     <span style="color: #a020f0;">if</span> DEBUG_LOG:
         <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"qfh_geometry() called with \n"</span>       \
-              <span style="color: #8b2252;">"base        = [ {} ]\n"</span>            \
-              <span style="color: #8b2252;">"r_w         = [ {} ]\n"</span>            \
-              <span style="color: #8b2252;">"n_helix     = [ {} ]\n"</span>            \
-              <span style="color: #8b2252;">"d_helix     = [ {} ]\n"</span>            \
-              <span style="color: #8b2252;">"s_helix     = [ {} ]\n"</span>            \
-              <span style="color: #8b2252;">"n_filaments = [ {} ]\n"</span>            \
-              <span style="color: #8b2252;">"n_segmemts  = [ {} ]\n"</span>            \
-              <span style="color: #8b2252;">"c_helix     = [ {} ]\n"</span>            \
-              <span style="color: #8b2252;">"l           = [ {} ]\n"</span>            \
-              <span style="color: #8b2252;">"l_0         = [ {} ]\n"</span>            \
-              <span style="color: #8b2252;">"l_n         = [ {} ]\n"</span>            \
-              <span style="color: #8b2252;">"l_seg       = [ {} ]\n"</span>            \
-              <span style="color: #8b2252;">"alpha       = [ {} ]\n"</span>            \
-              <span style="color: #8b2252;">"theta_seg   = [ {} ]\n"</span>            \
+              <span style="color: #8b2252;">"base            = [ {} ]\n"</span>          \
+              <span style="color: #8b2252;">"r_w             = [ {} ]\n"</span>          \
+              <span style="color: #8b2252;">"n_helix         = [ {} ]\n"</span>          \
+              <span style="color: #8b2252;">"d_helix         = [ {} ]\n"</span>          \
+              <span style="color: #8b2252;">"s_helix         = [ {} ]\n"</span>          \
+              <span style="color: #8b2252;">"n_filaments     = [ {} ]\n"</span>          \
+              <span style="color: #8b2252;">"n_segmemts      = [ {} ]\n"</span>          \
+              <span style="color: #8b2252;">"n_wire_segmemts = [ {} ]\n"</span>          \
+              <span style="color: #8b2252;">"c_helix         = [ {} ]\n"</span>          \
+              <span style="color: #8b2252;">"l               = [ {} ]\n"</span>          \
+              <span style="color: #8b2252;">"l_0             = [ {} ]\n"</span>          \
+              <span style="color: #8b2252;">"l_n             = [ {} ]\n"</span>          \
+              <span style="color: #8b2252;">"l_seg           = [ {} ]\n"</span>          \
+              <span style="color: #8b2252;">"alpha           = [ {} ]\n"</span>          \
+              <span style="color: #8b2252;">"theta_seg       = [ {} ]\n"</span>          \
               .<span style="color: #483d8b;">format</span>(base, r_w, n_helix, d_helix, s_helix,
-                      n_filaments, n_segments,
+                      n_filaments, n_segments, n_wire_segments,
                       c_helix, l, l_0, l_n, l_seg, alpha,
                       theta_seg))
 
@@ -344,7 +364,7 @@ The following function generates the antenna and feed geometry for a generalised
         <span style="color: #b22222;">#</span><span style="color: #b22222;">get the associated geometry</span>
         <span style="color: #a0522d;">geo</span> = context.get_geometry()
 
-    <span style="color: #b22222;">#</span><span style="color: #b22222;">ensure that we meet validity criterion for</span>
+    <span style="color: #b22222;"># </span><span style="color: #b22222;">ensure that we meet validity criterion for</span>
     <span style="color: #b22222;"># </span><span style="color: #b22222;">thin wire aproximation (non-extended thin wire kernel)</span>
     <span style="color: #a020f0;">assert</span> (l_0 / n_segments / r_w) &gt; 8
 
@@ -354,7 +374,7 @@ The following function generates the antenna and feed geometry for a generalised
                                           r_w))
 
     <span style="color: #a020f0;">if</span> construct_nec_context:
-        geo.wire(curr_tag, N_WIRE_SEGMENTS,
+        geo.wire(curr_tag, n_wire_segments,
                  0.0, 0.0, base,
                  0.0, 0.0, base + 0.1,
                  r_w, 1.0, 1.0)
@@ -405,7 +425,7 @@ The following function generates the antenna and feed geometry for a generalised
                                   x_1, y_1, z_1))
 
                 <span style="color: #a020f0;">if</span> construct_nec_context:
-                    geo.wire(curr_tag, N_WIRE_SEGMENTS,
+                    geo.wire(curr_tag, n_wire_segments,
                              x_0, y_0, z_0,
                              x_1, y_1, z_1,
                              r_w, 1.0, 1.0)
@@ -580,6 +600,28 @@ To be determined.  A suitable cost function for optimising our QFA.
 The geometry yielding these simulated parameters is shown in figure <a href="#qfh_geom">qfh_geom</a> .  It has a driven element length of \(l_d = 0.701\)m and radials of length \(l_r = 0.348 \)m that make angle \(\theta _r = 46.86^{\circ} \) with the xy-plane.
 </p>
 
+<div class="org-src-container">
+<pre class="src src-python" id="org56ad5e4"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">export_openscad_geometry</span>():
+
+    <span style="color: #a0522d;">context</span>, <span style="color: #a0522d;">solid_geom</span>, <span style="color: #a0522d;">feed_tags</span> = qfh_geometry(BASE, R_W, N_TURNS,
+                                                  D_HELIX, S_HELIX,
+                                                  N_FILAMENTS, N_SEGMENTS,
+                                                  N_WIRE_SEGMENTS,
+                                                  construct_nec_context=<span style="color: #008b8b;">False</span>,
+                                                  construct_solid_geom=<span style="color: #008b8b;">True</span>)
+
+    <span style="color: #a0522d;">out_dir</span> = sys.argv[1] <span style="color: #a020f0;">if</span> <span style="color: #483d8b;">len</span>(sys.argv) &gt; 1 <span style="color: #a020f0;">else</span> os.curdir
+    <span style="color: #a0522d;">file_out</span> = os.path.join(out_dir, <span style="color: #8b2252;">'qfh_antenna.scad'</span>)
+    sp.scad_render_to_file(solid_geom,
+                           filepath=file_out,
+                           file_header=<span style="color: #8b2252;">'$fa = {}; $fs = {};'</span>
+                           .<span style="color: #483d8b;">format</span>(OPENSCAD_SV_FA, OPENSCAD_SV_FS),
+                           include_orig_code=<span style="color: #008b8b;">False</span>)
+
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"{}: SCAD file written to: {}\n"</span>.<span style="color: #483d8b;">format</span>(__file__, file_out))
+</pre>
+</div>
+
 <figure>
   <img src="{{ site.url }}/assets/qfh_geom.png" alt="Antenna geometry" width="75%">	
   <figcaption>Antenna geometry</figcaption>
@@ -599,7 +641,7 @@ The geometry yielding these simulated parameters is shown in figure <a href="#qf
 <h2 id="org40ffcc3"><span class="section-number-2">3</span> Compute the radiation pattern for the optimised antenna and plot</h2>
 <div class="outline-text-2" id="text-3">
 <div class="org-src-container">
-<pre class="src src-python" id="orgfde36c6"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">plot_radiation_pattern</span>(context, label):
+<pre class="src src-python" id="org106b2bd"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">compute_radiation_pattern</span>(context):
 
     <span style="color: #b22222;"># </span><span style="color: #b22222;">Group III cards</span>
     <span style="color: #b22222;">#</span><span style="color: #b22222;">add a "rp" card to specify radiation pattern sampling parameters </span>
@@ -608,20 +650,19 @@ The geometry yielding these simulated parameters is shown in figure <a href="#qf
                     theta0=0.0, delta_theta=0.5, phi0=0.0, delta_phi=0.5,
                     radial_distance=0.0, gain_norm=0.0)
 
-    <span style="color: #b22222;"># </span><span style="color: #b22222;">and to cause program execution</span>
-    <span style="color: #b22222;"># </span><span style="color: #b22222;">- submitting a new fr_card doesn't seem to cause</span>
-    <span style="color: #b22222;">#   </span><span style="color: #b22222;">a simulation re-execution upon calling rp_card()</span>
-    context.xq_card(0)
-    <span style="color: #b22222;">#</span><span style="color: #b22222;">get the radiation_pattern</span>
-    <span style="color: #a0522d;">rp</span> = context.get_radiation_pattern(0)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-python" id="orgfde36c6"><span style="color: #a020f0;">def</span> <span style="color: #0000ff;">plot_radiation_pattern</span>(rp, label):
 
     <span style="color: #b22222;"># </span><span style="color: #b22222;">Gains are in decibels</span>
     <span style="color: #a0522d;">gains_db</span> = rp.get_gain()
     <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'gains_db.shape = {0}'</span>.<span style="color: #483d8b;">format</span>(gains_db.shape))
 
     <span style="color: #a0522d;">gains</span> = 10.0**(gains_db / 10.0)
-    <span style="color: #a0522d;">thetas</span> = rp.get_theta_angles() * 3.1415 / 180.0
-    <span style="color: #a0522d;">phis</span> = rp.get_phi_angles() * 3.1415 / 180.0
+    <span style="color: #a0522d;">thetas</span> = np.deg2rad(rp.get_theta_angles())
+    <span style="color: #a0522d;">phis</span> = np.deg2rad(rp.get_phi_angles())
 
     <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'thetas.shape = {0} [{1},{2}]'</span>
           .<span style="color: #483d8b;">format</span>(thetas.shape, thetas[0], thetas[<span style="color: #483d8b;">len</span>(thetas)-1]))
@@ -630,37 +671,71 @@ The geometry yielding these simulated parameters is shown in figure <a href="#qf
     <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">'gains \in [{0},{1}]'</span>.<span style="color: #483d8b;">format</span>(np.amin(gains), np.amax(gains)))
     <span style="color: #a0522d;">fig</span> = plt.figure()
 
+    <span style="color: #a0522d;">max_gain_22deg5</span> = np.amax(gains_db[(180 * 3)//4 - 1,:])
+    <span style="color: #a0522d;">max_gain_45deg0</span> = np.amax(gains_db[180//2 - 1,:])
+
+    <span style="color: #a0522d;">max_plotted_xy_plane_gain</span> = np.<span style="color: #483d8b;">max</span>([max_gain_22deg5, max_gain_45deg0])
+
+    <span style="color: #a0522d;">min_gain_22deg5</span> = np.amin(gains_db[(180 * 3)//4 - 1,:])
+    <span style="color: #a0522d;">min_gain_45deg0</span> = np.amin(gains_db[180//2 - 1,:])
+
+    <span style="color: #a0522d;">min_plotted_xy_plane_gain</span> = np.<span style="color: #483d8b;">min</span>([min_gain_22deg5, min_gain_45deg0])
+
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"amax(gains|\\theta=22.5) = {} amax(gains|\\theta=45.0) = {}"</span>  \
+          <span style="color: #8b2252;">"max() = {}"</span>.<span style="color: #483d8b;">format</span>(max_gain_22deg5, max_gain_45deg0,
+                              max_plotted_xy_plane_gain))
+
+    <span style="color: #a020f0;">print</span>(<span style="color: #8b2252;">"amin(gains|\\theta=22.5) = {} amin(gains|\\theta=45.0) = {}"</span>  \
+          <span style="color: #8b2252;">"min() = {}"</span>.<span style="color: #483d8b;">format</span>(min_gain_22deg5, min_gain_45deg0,
+                              min_plotted_xy_plane_gain))
+
+    <span style="color: #a0522d;">max_plotted_xz_plane_gain</span> = np.<span style="color: #483d8b;">max</span>([max_gain_22deg5, max_gain_45deg0])
+    <span style="color: #a0522d;">max_plotted_yz_plane_gain</span> = np.<span style="color: #483d8b;">max</span>([max_gain_22deg5, max_gain_45deg0])
+
     <span style="color: #b22222;"># </span><span style="color: #b22222;">Plot 2d polar plots</span>
     <span style="color: #a0522d;">ax</span> = fig.add_subplot(2, 2, 1, projection=<span style="color: #8b2252;">'polar'</span>)
-    ax.plot(phis, gains[180//4 - 1,:], color=<span style="color: #8b2252;">'r'</span>, linewidth=3)
+    ax.plot(phis, gains_db[(180 * 3)//4 - 1,:], color=<span style="color: #8b2252;">'r'</span>, linewidth=3)
     ax.grid(<span style="color: #008b8b;">True</span>)
-    ax.set_rmax(1.0)
+    <span style="color: #b22222;">#    </span><span style="color: #b22222;">ax.set_rmax(max_plotted_xy_plane_gain)</span>
+    ax.set_rlim(rmin=min_plotted_xy_plane_gain,
+                rmax=max_plotted_xy_plane_gain)
+    ax.set_theta_zero_location(<span style="color: #8b2252;">"S"</span>)
+    <span style="color: #b22222;">#    </span><span style="color: #b22222;">ax.set_rscale('log')</span>
+    <span style="color: #b22222;">#    </span><span style="color: #b22222;">ax.set_rmax(10)</span>
     ax.set_title(<span style="color: #8b2252;">"Gain at an elevation of 22.5 degrees"</span>, va=<span style="color: #8b2252;">'bottom'</span>)
 
     <span style="color: #a0522d;">ax</span> = fig.add_subplot(2, 2, 2, projection=<span style="color: #8b2252;">'polar'</span>)
-    ax.plot(np.concatenate((thetas, np.pi - thetas)),
-            np.concatenate((gains[:,0], gains[:,360])),
+    ax.plot(np.concatenate((np.flip(thetas), -thetas)),
+            np.concatenate((np.flip(gains[:,360]), gains[:,0])),
             color=<span style="color: #8b2252;">'r'</span>, linewidth=3)
     ax.grid(<span style="color: #008b8b;">True</span>)
-    ax.set_rmax(1.5)
-    ax.set_thetalim(thetamin=0.0, thetamax=180.0)
-    ax.set_thetagrids([0.0, 30.0, 60.0, 90.0, 120.0, 150.0, 180.0])
+    ax.set_rlim(rmin=np.amin([gains[:,360], gains[:,0]]),
+                rmax=np.amax([gains[:,360], gains[:,0]]))
+    ax.set_thetalim(thetamin=-90.0, thetamax=90.0)
+    ax.set_thetagrids([-90.0, -60.0, -30.0, 0.0, 30.0, 60.0, 90.0])
+    ax.set_theta_zero_location(<span style="color: #8b2252;">"N"</span>)
     ax.set_title(<span style="color: #8b2252;">"Gain sliced through xz-plane"</span>, va=<span style="color: #8b2252;">'bottom'</span>)
 
     <span style="color: #a0522d;">ax</span> = fig.add_subplot(2, 2, 3, projection=<span style="color: #8b2252;">'polar'</span>)
-    ax.plot(phis, gains[180//2 - 1,:], color=<span style="color: #8b2252;">'r'</span>, linewidth=3)
+    ax.plot(phis, gains_db[180//2 - 1,:], color=<span style="color: #8b2252;">'r'</span>, linewidth=3)
     ax.grid(<span style="color: #008b8b;">True</span>)
-    ax.set_rmax(1.0)
+    <span style="color: #b22222;">#    </span><span style="color: #b22222;">ax.set_rmax(max_plotted_xy_plane_gain)</span>
+    ax.set_rlim(rmin=min_plotted_xy_plane_gain,
+                rmax=max_plotted_xy_plane_gain)
+    ax.set_theta_zero_location(<span style="color: #8b2252;">"S"</span>)
     ax.set_title(<span style="color: #8b2252;">"Gain at an elevation of 45 degrees"</span>, va=<span style="color: #8b2252;">'bottom'</span>)
 
     <span style="color: #a0522d;">ax</span> = fig.add_subplot(2, 2, 4, projection=<span style="color: #8b2252;">'polar'</span>)
-    ax.plot(np.concatenate((thetas, np.pi - thetas)),
-            np.concatenate((gains[:,180], gains[:,540])),
+    ax.plot(np.concatenate((np.flip(thetas), -thetas)),
+            np.concatenate((np.flip(gains[:,540]), gains[:,180])),
             color=<span style="color: #8b2252;">'r'</span>, linewidth=3)
     ax.grid(<span style="color: #008b8b;">True</span>)
-    ax.set_rmax(1.5)
-    ax.set_thetalim(thetamin=0.0, thetamax=180.0)
-    ax.set_thetagrids([0.0, 30.0, 60.0, 90.0, 120.0, 150.0, 180.0])
+    <span style="color: #b22222;">#    </span><span style="color: #b22222;">ax.set_rmax(np.amax([gains[:,180], gains[:,540]]))</span>
+    ax.set_rlim(rmin=np.amin([gains[:,180], gains[:,540]]),
+                rmax=np.amax([gains[:,180], gains[:,540]]))
+    ax.set_thetalim(thetamin=-90.0, thetamax=90.0)
+    ax.set_thetagrids([-90.0, -60.0, -30.0, 0.0, 30.0, 60.0, 90.0])
+    ax.set_theta_zero_location(<span style="color: #8b2252;">"N"</span>)
     ax.set_title(<span style="color: #8b2252;">"Gain sliced through yz-plane"</span>, va=<span style="color: #8b2252;">'bottom'</span>)
 
     plt.savefig(<span style="color: #8b2252;">'../images/qfh_polar_plots_{}.png'</span>.<span style="color: #483d8b;">format</span>(label))
@@ -700,29 +775,35 @@ The geometry yielding these simulated parameters is shown in figure <a href="#qf
 
     <span style="color: #a0522d;">base</span> = BASE
 
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">modes = [ 'higher-order' ]</span>
     <span style="color: #a0522d;">modes</span> = [ <span style="color: #8b2252;">'normal'</span>, <span style="color: #8b2252;">'axial'</span>, <span style="color: #8b2252;">'higher-order'</span> ]
+    <span style="color: #b22222;">#</span><span style="color: #b22222;">freqs = [ 1370.0 ]</span>
     <span style="color: #a0522d;">freqs</span> = [ 0.1, 137.0, 1370.0 ]
 
     <span style="color: #b22222;"># </span><span style="color: #b22222;">begin with the degenerate case of a single filament</span>
     <span style="color: #a0522d;">n_filaments</span> = 1
 
-    <span style="color: #a0522d;">context</span>, <span style="color: #a0522d;">solid_geom</span>, <span style="color: #a0522d;">feed_tags</span> = qfh_geometry(BASE, R_W, N, D, S,
+    <span style="color: #a0522d;">context</span>, <span style="color: #a0522d;">solid_geom</span>, <span style="color: #a0522d;">feed_tags</span> = qfh_geometry(BASE, R_W, N_TURNS,
+                                                  D_HELIX, S_HELIX,
                                                   n_filaments, N_SEGMENTS,
+                                                  N_WIRE_SEGMENTS,
                                                   construct_nec_context=<span style="color: #008b8b;">True</span>,
                                                   construct_solid_geom=<span style="color: #008b8b;">True</span>)
     set_excitation(context, feed_tags)
 
     <span style="color: #a020f0;">for</span> i <span style="color: #a020f0;">in</span> <span style="color: #483d8b;">range</span>(<span style="color: #483d8b;">len</span>(modes)):
-        set_frequency(context, freqs[2])
-        plot_radiation_pattern(context, modes[2])
+        <span style="color: #b22222;"># </span><span style="color: #b22222;">ensure that we meet validity criterion for</span>
+        <span style="color: #b22222;"># </span><span style="color: #b22222;">segment length delta &lt; 0.1 lambda</span>
+        <span style="color: #a020f0;">assert</span> delta_criterion_met(D_HELIX, S_HELIX, N_SEGMENTS,
+                                   N_WIRE_SEGMENTS, freqs[i])
+
+        set_frequency(context, freqs[i])
+        compute_radiation_pattern(context)
+        <span style="color: #b22222;">#</span><span style="color: #b22222;">get the radiation_pattern</span>
+        <span style="color: #a0522d;">rp</span> = context.get_radiation_pattern(i)
+        plot_radiation_pattern(rp, modes[i])
 
     <span style="color: #a020f0;">return</span> 0
-</pre>
-</div>
-
-<div class="org-src-container">
-<pre class="src src-sh" id="orgaeb102c">python qfh_antenna.py 2&gt;&amp;1
-true
 </pre>
 </div>
 </div>
@@ -898,8 +979,8 @@ The plot in figure <a href="#qfh_vswr">qfh_vswr</a> shows the response of the op
 </div>
 
 
-<div id="outline-container-orgdeefd52" class="outline-2">
-<h2 id="orgdeefd52"><span class="section-number-2">6</span> Performance sensitivity to realised length</h2>
+<div id="outline-container-org5fa5caa" class="outline-2">
+<h2 id="org5fa5caa"><span class="section-number-2">6</span> Performance sensitivity to realised length</h2>
 <div class="outline-text-2" id="text-6">
 <p>
 For a real-world antenna with construction defects, what is the effect on antenna impedance of the driven element and radials having lengths that deviate from the ideal computed value?  We attempt to compute the partial derivative of \(Z\) with respect to \(l_d\) by taking finite differences around the optimised value of \(l_d\) and estimate our construction tolerance \(\sigma l = 0.01\).  For some small \(h\) we have
@@ -945,8 +1026,8 @@ For a real-world antenna with construction defects, what is the effect on antenn
 
 
 
-<div id="outline-container-org70f0699" class="outline-2">
-<h2 id="org70f0699"><span class="section-number-2">7</span> Performance sensitivity to realised length</h2>
+<div id="outline-container-org5a50877" class="outline-2">
+<h2 id="org5a50877"><span class="section-number-2">7</span> Performance sensitivity to realised length</h2>
 </div>
 
 
